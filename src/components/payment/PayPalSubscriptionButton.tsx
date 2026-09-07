@@ -349,16 +349,18 @@ export const PayPalSubscriptionButton: React.FC<PayPalSubscriptionButtonProps> =
       )}
 
       {/* Quick Instant Test Activation for Sandbox / Review */}
-      <button
-        type="button"
-        onClick={handleInstantActivation}
-        disabled={isProcessing}
-        className="w-full py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-300 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all"
-        title="Activer immédiatement l'abonnement en mode sandbox"
-      >
-        <Zap className="w-3.5 h-3.5 text-amber-400" />
-        <span>Activation Instantanée Sandbox BizOS (Test 1-Clic)</span>
-      </button>
+      {import.meta.env.DEV && (
+        <button
+          type="button"
+          onClick={handleInstantActivation}
+          disabled={isProcessing}
+          className="w-full py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 text-amber-300 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all"
+          title="Activer immédiatement l'abonnement en mode sandbox"
+        >
+          <Zap className="w-3.5 h-3.5 text-amber-400" />
+          <span>Activation Instantanée Sandbox BizOS (Test 1-Clic)</span>
+        </button>
+      )}
 
       <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400">
         <ShieldCheck className="w-3 h-3 text-emerald-400" />

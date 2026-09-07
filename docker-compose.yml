@@ -55,6 +55,7 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
       PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_ENVIRONMENT: ${PAYPAL_ENVIRONMENT:-production}
     ports:
       - "3000:3000"
     healthcheck:
