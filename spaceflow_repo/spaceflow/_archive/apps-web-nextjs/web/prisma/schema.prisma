@@ -1,0 +1,1282 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Tenant {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("ENTERPRISE") // FREE, PRO, ENTERPRISE
+  logo        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users             User[]
+  buildings         Building[]
+  assets            Asset[]
+  procedures        Procedure[]
+  workOrders        WorkOrder[]
+  workOrderTemplates WorkOrderTemplate[]
+  floorPlans        FloorPlan[]
+  parts             Part[]
+  failureCodes      FailureCode[]
+  digitalTwins      DigitalTwin[]
+  notifications     Notification[]
+  tenantConfigs     TenantConfig[]
+  tenantDomains     TenantDomain[]
+  erpConnections    ERPConnection[]
+  bimModels         BIMModel[]
+  suppliers         Supplier[]
+  contracts         MaintenanceContract[]
+  energyMeters      EnergyMeter[]
+  emissionFactors   EmissionFactor[]
+  esgReports        ESGReport[]
+  bimImportJobs     BIMImportJob[]
+  bimAnnotations    BIMAnnotation[]
+  apiKeys           APIKey[]
+  webhooks          Webhook[]
+  aiSessions        AISession[]
+  assetDocuments    AssetDocument[]
+  iotConnectors     IoTConnector[]
+  extensions        ExtensionInstall[]
+  workflows         WorkflowDefinition[]
+  sectorInstalls    SectorTemplateInstall[]
+}
+
+model TenantConfig {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key       String
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, key])
+}
+
+model TenantDomain {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domain    String   @unique
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  firstName    String
+  lastName     String
+  role         String   @default("VIEWER")
+  department   String?
+  avatar       String?
+  isActive     Boolean  @default(true)
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workOrders        WorkOrder[]               @relation("AssignedTo")
+  createdWOs        WorkOrder[]               @relation("CreatedBy")
+  assets            Asset[]
+  comments          Comment[]
+  pushSubscriptions PushSubscription[]
+  notifications     Notification[]
+  notificationPref  NotificationPreference?
+  inventoryMovements InventoryMovement[]
+  planAnnotations    PlanAnnotation[]
+  bimAnnotations     BIMAnnotation[]
+}
+
+model Building {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  city        String
+  country     String
+  totalArea   Float
+  floors      Int
+  yearBuilt   Int
+  imageUrl    String?
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt   DateTime @default(now())
+
+  spaces       Space[]
+  floorPlans   FloorPlan[]
+  energyMeters EnergyMeter[]
+  assets       Asset[]
+  leases       Lease[]
+  digitalTwins DigitalTwin[]
+  bimModels    BIMModel[]
+}
+
+model Space {
+  id         String   @id @default(uuid())
+  name       String
+  type       String   // office, meeting-room, common-area, storage
+  floor      Int
+  area       Float
+  capacity   Int
+  occupancy  Int      @default(0)
+  status     String   @default("available") // available, occupied, maintenance
+  price      Float?
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id])
+
+  reservations Reservation[]
+  floorPlans   FloorPlan[]
+}
+
+model Asset {
+  id              String      @id @default(uuid())
+  tenantId        String      // ← RLS enforced (required)
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  parentId        String?
+  parent          Asset?      @relation("AssetHierarchy", fields: [parentId], references: [id])
+  children        Asset[]     @relation("AssetHierarchy")
+  type            String      // e.g. BUILDING, FLOOR, ROOM, EQUIPMENT
+  code            String
+  name            String
+  category        String      // HVAC, electrical, furniture, IT, security
+  model           String?
+  serialNumber    String      @unique
+  manufacturer    String?
+  purchaseDate    DateTime?
+  purchasePrice   Float?
+  warrantyEnd     DateTime?
+  location        Unsupported("geography(Point, 4326)")? // PostGIS
+  geometry        Json?       // bounding box minimal
+  bimRef          String?     // GUID IFC externe
+  status          String      @default("OPERATIONAL")
+  healthScore     Int         @default(100) // 0-100
+  lastMaintenance DateTime?
+  nextMaintenance DateTime?
+  buildingId      String?
+  building        Building?   @relation(fields: [buildingId], references: [id])
+  managerId       String?
+  manager         User?       @relation(fields: [managerId], references: [id])
+
+  workOrders      WorkOrder[]
+  sensors         Sensor[]
+  maintenanceLogs MaintenanceLog[]
+  procedures      Procedure[]
+  digitalTwins    DigitalTwin[]
+  bimElements     BIMElement[]
+  erpAssetMappings ERPAssetMapping[]
+  planAnnotations  PlanAnnotation[]
+  contracts        MaintenanceContract[] @relation("AssetContracts")
+  energyMeters     EnergyMeter[]
+  bimAnnotations   BIMAnnotation[]
+  documents        AssetDocument[]
+  iotReadings      IoTReading[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Sensor {
+  id        String   @id @default(uuid())
+  type      String   // temperature, humidity, energy, vibration
+  value     Float
+  unit      String
+  status    String   @default("active")
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  readings  SensorReading[]
+  createdAt DateTime @default(now())
+}
+
+model SensorReading {
+  id        String   @id @default(uuid())
+  value     Float
+  timestamp DateTime @default(now())
+  sensorId  String
+  sensor    Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+}
+
+model WorkOrder {
+  id            String    @id @default(uuid())
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  title         String
+  description   String
+  type          String
+  priority      String    @default("MEDIUM")
+  status        String    @default("PENDING")
+  estimatedCost Float?
+  actualCost    Float?
+  scheduledAt   DateTime
+  completedAt   DateTime?
+  signatureUrl  String?
+  attachments   Json?
+  checklist     Json?
+
+  templateId    String?
+  template      WorkOrderTemplate? @relation(fields: [templateId], references: [id])
+
+  assetId       String
+  asset         Asset     @relation(fields: [assetId], references: [id])
+
+  assignedToId  String?
+  assignedTo    User?     @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  createdById   String
+  createdBy     User      @relation("CreatedBy", fields: [createdById], references: [id])
+
+  contractId    String?
+  contract      MaintenanceContract? @relation(fields: [contractId], references: [id])
+
+  comments      Comment[]
+  orderParts    WorkOrderPart[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  content     String
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  createdAt   DateTime  @default(now())
+}
+
+model MaintenanceLog {
+  id          String   @id @default(uuid())
+  description String
+  cost        Float
+  performedAt DateTime
+  performedBy String
+  assetId     String
+  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Lease {
+  id          String   @id @default(uuid())
+  tenant      String
+  startDate   DateTime
+  endDate     DateTime
+  monthlyRent Float
+  deposit     Float
+  status      String   @default("active")
+  buildingId  String
+  building    Building @relation(fields: [buildingId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  startTime DateTime
+  endTime   DateTime
+  purpose   String
+  userId    String?
+  spaceId   String
+  space     Space    @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model EnergyConsumption {
+  id         String   @id @default(uuid())
+  buildingId String
+  type       String   // electricity, gas, water
+  value      Float
+  unit       String
+  cost       Float
+  period     DateTime
+  createdAt  DateTime @default(now())
+}
+
+// ============== AUDIT TRAIL ==============
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   // ex: CREATE_ASSET, DELETE_WORK_ORDER
+  entity    String   // ex: ASSET, WORK_ORDER
+  entityId  String?
+  ipAddress String?
+  details   Json?
+  timestamp DateTime @default(now())
+}
+
+// ============== CMMS / GMAO ==============
+model Part {
+  id          String   @id @default(uuid())
+  partNumber  String   @unique
+  name        String
+  category    String
+  description String?
+  unit        String   @default("unit")
+  unitCost    Float
+  quantity    Int      @default(0)
+  minQuantity Int      @default(5)
+  maxQuantity Int      @default(100)
+  location    String?
+  supplier    String?
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+
+  movements   InventoryMovement[]
+  orderParts  WorkOrderPart[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InventoryMovement {
+  id        String   @id @default(uuid())
+  type      String   // IN, OUT, ADJUSTMENT, RETURN
+  quantity  Int
+  reason    String
+  reference String?
+  partId    String
+  part      Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model WorkOrderPart {
+  id          String    @id @default(uuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  partId      String
+  part        Part      @relation(fields: [partId], references: [id])
+  quantity    Int
+  unitCost    Float
+}
+
+model Procedure {
+  id            String   @id @default(uuid())
+  title         String
+  category      String
+  steps         Json
+  estimatedTime Int      // minutes
+  safetyNotes   String?
+  assetId       String?
+  asset         Asset?   @relation(fields: [assetId], references: [id])
+  tenantId      String?
+  tenant        Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model FailureCode {
+  id          String   @id @default(uuid())
+  code        String
+  description String
+  category    String
+  severity    String
+  resolution  String?
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+// ============== DIGITAL TWIN ==============
+model DigitalTwin {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // BUILDING, FLOOR, ASSET
+  modelUrl    String?  // 3D model URL
+  metadata    Json
+  position    Json?
+  buildingId  String?
+  building    Building? @relation(fields: [buildingId], references: [id])
+  assetId     String?
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  snapshots   TwinSnapshot[]
+  simulations TwinSimulation[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TwinSnapshot {
+  id        String      @id @default(uuid())
+  twinId    String
+  twin      DigitalTwin @relation(fields: [twinId], references: [id], onDelete: Cascade)
+  data      Json
+  thumbnail String?
+  createdAt DateTime    @default(now())
+}
+
+model TwinSimulation {
+  id         String      @id @default(uuid())
+  twinId     String
+  twin       DigitalTwin @relation(fields: [twinId], references: [id], onDelete: Cascade)
+  scenario   String      // 'fire', 'evacuation', 'energy_optim', 'maintenance'
+  parameters Json
+  results    Json
+  duration   Int         // minutes simulated
+  createdAt  DateTime    @default(now())
+}
+
+// ============== NOTIFICATIONS PUSH ==============
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  type      String    // WORK_ORDER, ASSET, SENSOR, LEASE, INVENTORY
+  title     String
+  body      String
+  data      Json?
+  priority  String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  tenantId  String?
+  tenant    Tenant?   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime  @default(now())
+}
+
+model NotificationPreference {
+  id                 String  @id @default(uuid())
+  userId             String  @unique
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workOrderAssigned  Boolean @default(true)
+  workOrderCompleted Boolean @default(false)
+  assetAlerts        Boolean @default(true)
+  sensorAlerts       Boolean @default(true)
+  leaseExpiring      Boolean @default(true)
+  inventoryLow       Boolean @default(true)
+  emailEnabled       Boolean @default(true)
+  pushEnabled        Boolean @default(true)
+  smsEnabled         Boolean @default(false)
+  quietHoursStart    Int?    // 22
+  quietHoursEnd      Int?    // 7
+}
+
+// ============== ERP INTEGRATION ==============
+model ERPConnection {
+  id             String        @id @default(uuid())
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name           String
+  type           String        // SAP, ORACLE, DYNAMICS, ODOO, GENERIC
+  status         String        @default("INACTIVE") // ACTIVE, INACTIVE, ERROR
+
+  // Configuration
+  baseUrl        String
+  apiVersion     String?
+  clientId       String?
+  clientSecret   String?       // chiffre
+  username       String?
+  password       String?       // chiffre
+  apiKey         String?
+  companyCode    String?
+  plantCode      String?
+
+  // Mapping
+  entityMapping  Json
+
+  // Sync config
+  syncAssets     Boolean       @default(true)
+  syncWorkOrders Boolean       @default(true)
+  syncInvoices   Boolean       @default(false)
+  syncInterval   Int           @default(60) // minutes
+
+  lastSyncAt     DateTime?
+  lastError      String?
+  totalSynced    Int           @default(0)
+
+  syncLogs       ERPSyncLog[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model ERPSyncLog {
+  id               String        @id @default(uuid())
+  connectionId     String
+  connection       ERPConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  type             String        // ASSET_PULL, WO_PUSH, INVOICE_PULL, etc.
+  status           String        // SUCCESS, PARTIAL, FAILED
+  recordsProcessed Int           @default(0)
+  recordsCreated   Int           @default(0)
+  recordsUpdated   Int           @default(0)
+  recordsFailed    Int           @default(0)
+  errors           Json?
+  duration         Int           // ms
+  startedAt        DateTime
+  completedAt      DateTime?
+  triggeredBy      String?       // 'SCHEDULED', 'MANUAL', 'WEBHOOK'
+  createdAt        DateTime      @default(now())
+}
+
+model ERPAssetMapping {
+  id               String    @id @default(uuid())
+  connectionId     String
+  cafmAssetId      String
+  cafmAsset        Asset     @relation(fields: [cafmAssetId], references: [id], onDelete: Cascade)
+  erpAssetId       String
+  erpAssetType     String?
+  lastSyncedAt     DateTime?
+  syncDirection    String    @default("BIDIRECTIONAL") // PULL, PUSH, BIDIRECTIONAL
+  conflictStrategy String    @default("LATEST_WINS") // LATEST_WINS, ERP_WINS, CAFM_WINS, MANUAL
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model ERPInvoice {
+  id            String    @id @default(uuid())
+  connectionId  String
+  invoiceNumber String
+  vendor        String
+  amount        Float
+  currency      String    @default("EUR")
+  invoiceDate   DateTime
+  dueDate       DateTime?
+  status        String    @default("PENDING") // PENDING, APPROVED, PAID, REJECTED
+  poNumber      String?
+  workOrderId   String?
+  attachments   Json?
+  syncedAt      DateTime  @default(now())
+
+  @@unique([connectionId, invoiceNumber])
+}
+
+// ============== BIM (BUILDING INFORMATION MODELING) ==============
+model BIMModel {
+  id          String       @id @default(uuid())
+  name        String
+  fileUrl     String
+  version     Int          @default(1)
+  buildingId  String
+  building    Building     @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  tenantId    String?
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
+  elements    BIMElement[]
+  annotations BIMAnnotation[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model BIMElement {
+  id         String        @id @default(uuid())
+  modelId    String
+  model      BIMModel      @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  ifcId      String        // GlobalId dans le fichier IFC
+  name       String
+  type       String        // IfcWall, IfcWindow, IfcDoor, IfcFlowTerminal, etc.
+  spaceId    String?
+  assetId    String?
+  asset      Asset?        @relation(fields: [assetId], references: [id])
+  properties BIMProperty[]
+  createdAt  DateTime      @default(now())
+}
+
+model BIMProperty {
+  id        String     @id @default(uuid())
+  elementId String
+  element   BIMElement @relation(fields: [elementId], references: [id], onDelete: Cascade)
+  set       String     // ex: Pset_WallCommon
+  name      String     // ex: LoadBearing
+  value     String     // valeur stockee en chaine
+}
+
+
+// ============== CRM SAAS ==============
+
+model CRMOrganization {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  industry    String?
+  size        String?  // 1-10, 11-50, 51-200, 200+
+  logoUrl     String?
+  website     String?
+  plan        String   @default("FREE") // FREE, STARTER, PRO, ENTERPRISE
+  maxUsers    Int      @default(1)
+  maxContacts Int      @default(100)
+  trialEndsAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       CRMUser[]
+  contacts    CRMContact[]
+  deals       CRMDeal[]
+  activityLogs CRMActivityLog[]
+  customFields CRMCustomField[]
+  importJobs  CRMImportJob[]
+}
+
+model CRMUser {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  firstName       String
+  lastName        String
+  role            String   @default("OWNER") // OWNER, ADMIN, MEMBER, VIEWER
+  companyName     String?
+  jobTitle        String?
+  avatar          String?
+  phone           String?
+  emailVerified   Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  lastLoginAt     DateTime?
+  plan            String   @default("FREE")
+  trialEndsAt     DateTime?
+  subscriptionId  String?
+
+  // ─── Stripe ───────────────────────────────────────────────────
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  subscriptionStatus   String?  @default("TRIAL") // TRIAL, ACTIVE, PAST_DUE, CANCELED, PAUSED
+
+  organizationId  String
+  organization    CRMOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts        CRMContact[]
+  deals           CRMDeal[]
+  activities      CRMActivity[]
+  activityLogs    CRMActivityLog[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CRMContact {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   CRMOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  firstName      String
+  lastName       String
+  email          String?
+  phone          String?
+  mobile         String?
+  company        String?
+  jobTitle       String?
+  department     String?
+  industry       String?
+  companySize    String?
+  website        String?
+  address        String?
+  city           String?
+  postalCode     String?
+  country        String?
+  linkedin       String?
+  twitter        String?
+  type           String   @default("LEAD") // LEAD, PROSPECT, CUSTOMER, PARTNER, VENDOR
+  source         String?
+  status         String   @default("ACTIVE") // ACTIVE, INACTIVE, BLOCKED
+  rating         Int?
+  tags           Json?
+  ownerId        String
+  owner          CRMUser  @relation(fields: [ownerId], references: [id])
+  deals          CRMDeal[]
+  activities     CRMActivity[]
+  lastContactedAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CRMDeal {
+  id                String   @id @default(uuid())
+  organizationId    String
+  organization      CRMOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name              String
+  amount            Float    @default(0)
+  currency          String   @default("EUR")
+  status            String   @default("PIPELINE") // PIPELINE, QUALIFIED, PROPOSAL, NEGOTIATION, WON, LOST
+  stage             String   @default("Pipeline")
+  probability       Int      @default(10)
+  expectedCloseDate DateTime
+  closedAt          DateTime?
+  source            String?
+  campaign          String?
+  description       String?
+  nextStep          String?
+  lostReason        String?
+  tags              Json?
+  contactId         String
+  contact           CRMContact @relation(fields: [contactId], references: [id])
+  ownerId           String
+  owner             CRMUser  @relation(fields: [ownerId], references: [id])
+  activities        CRMActivity[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model CRMActivity {
+  id             String   @id @default(uuid())
+  organizationId String
+  type           String   // CALL, EMAIL, MEETING, NOTE, TASK
+  subject        String
+  description    String?
+  contactId      String?
+  contact        CRMContact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  dealId         String?
+  deal           CRMDeal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  userId         String
+  user           CRMUser     @relation(fields: [userId], references: [id])
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+}
+
+model CRMActivityLog {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   CRMOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           CRMUser? @relation(fields: [userId], references: [id])
+  action         String   // CREATE, UPDATE, DELETE, LOGIN
+  entity         String
+  entityId       String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+}
+
+model CRMCustomField {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   CRMOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  entity         String   // 'contact', 'deal'
+  name           String
+  label          String
+  type           String   // text, number, date, select, multiselect, boolean
+  options        Json?
+  required       Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+}
+
+model CRMImportJob {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   CRMOrganization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           String   // 'contacts', 'deals'
+  status         String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  totalRows      Int      @default(0)
+  processed      Int      @default(0)
+  succeeded      Int      @default(0)
+  failed         Int      @default(0)
+  errors         Json?
+  fileName       String
+  userId         String
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+}
+
+// ============== PLANS 2D & WO TEMPLATES ==============
+model WorkOrderTemplate {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  type        String   // PREVENTIVE, CORRECTIVE, REGULATORY
+  description String?
+  checklist   Json?    // Default tasks
+  priority    String   @default("MEDIUM")
+  workOrders  WorkOrder[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FloorPlan {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  fileUrl     String   // PDF or image URL
+  buildingId  String?
+  building    Building? @relation(fields: [buildingId], references: [id])
+  spaceId     String?
+  space       Space?    @relation(fields: [spaceId], references: [id])
+  annotations PlanAnnotation[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PlanAnnotation {
+  id          String    @id @default(uuid())
+  planId      String
+  plan        FloorPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  assetId     String?
+  asset       Asset?    @relation(fields: [assetId], references: [id])
+  geometry    Json      // Coordinates/layer data for the annotation
+  markup      Json?     // SVG path, text, styling, etc.
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============== CONTRATS & FOURNISSEURS ==============
+model Supplier {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  code        String?
+  type        String   @default("MAINTENANCE") // MAINTENANCE, PARTS, SERVICES, UTILITIES
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  country     String?
+  website     String?
+  vatNumber   String?
+  rating      Int?     // 1-5
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, BLACKLISTED
+  notes       String?
+  contracts   MaintenanceContract[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MaintenanceContract {
+  id              String    @id @default(uuid())
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplierId      String
+  supplier        Supplier  @relation(fields: [supplierId], references: [id])
+  name            String
+  type            String    // MAINTENANCE, WARRANTY, SLA, INSURANCE, LEASE
+  reference       String?
+  status          String    @default("ACTIVE") // ACTIVE, EXPIRED, PENDING, TERMINATED
+  startDate       DateTime
+  endDate         DateTime
+  value           Float?
+  currency        String    @default("EUR")
+  renewalAlert    Int       @default(30) // days before end to alert
+  autoRenewal     Boolean   @default(false)
+  slaResponseTime Int?      // hours
+  slaResolutionTime Int?    // hours
+  terms           String?
+  attachments     Json?
+  assets          Asset[]   @relation("AssetContracts")
+  workOrders      WorkOrder[]
+  alerts          ContractAlert[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model ContractAlert {
+  id          String              @id @default(uuid())
+  contractId  String
+  contract    MaintenanceContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  type        String              // EXPIRY, RENEWAL, PAYMENT
+  alertDate   DateTime
+  sent        Boolean             @default(false)
+  sentAt      DateTime?
+  createdAt   DateTime            @default(now())
+}
+
+// ============== ESG - DONNÉES ENVIRONNEMENTALES ==============
+model EnergyMeter {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  buildingId  String?
+  building    Building? @relation(fields: [buildingId], references: [id])
+  assetId     String?
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+  name        String
+  type        String   // ELECTRICITY, GAS, WATER, HEAT, COOLING
+  unit        String   // kWh, m3, l, MWh
+  externalRef String?  // ID du compteur physique / PDL / PRM
+  active      Boolean  @default(true)
+  readings    MeterReading[]
+  invoices    EnergyInvoice[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MeterReading {
+  id        String      @id @default(uuid())
+  meterId   String
+  meter     EnergyMeter @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  value     Float       // Index ou consommation sur la période
+  unit      String
+  readAt    DateTime
+  source    String      @default("MANUAL") // MANUAL, IOT, IMPORT
+  createdAt DateTime    @default(now())
+}
+
+model EnergyInvoice {
+  id           String      @id @default(uuid())
+  meterId      String
+  meter        EnergyMeter @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  reference    String?
+  periodStart  DateTime
+  periodEnd    DateTime
+  consumption  Float       // kWh / m3
+  unit         String
+  amount       Float
+  currency     String      @default("EUR")
+  scope1       Float?      // tCO2e (combustion directe)
+  scope2       Float?      // tCO2e (énergie achetée)
+  scope3       Float?      // tCO2e (cat 13 downstream)
+  rawText      String?     // Texte brut extrait du PDF
+  fileUrl      String?     // URL du PDF
+  parsedAt     DateTime?   // Date de parsing automatique
+  factorId     String?
+  factor       EmissionFactor? @relation(fields: [factorId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model EmissionFactor {
+  id          String   @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  source      String   // ADEME, DEFRA, IEA
+  type        String   // ELECTRICITY, GAS, WATER, etc.
+  region      String   // FR, UK, EU, GLOBAL
+  year        Int
+  value       Float    // kgCO2e / kWh ou kgCO2e / m3
+  unit        String   @default("kgCO2e/kWh")
+  invoices    EnergyInvoice[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([source, type, region, year])
+}
+
+model ESGReport {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String
+  periodStart     DateTime
+  periodEnd       DateTime
+  status          String   @default("DRAFT") // DRAFT, GENERATED, SIGNED, SUBMITTED
+  scope1Total     Float?   // tCO2e
+  scope2Location  Float?   // tCO2e (location-based)
+  scope2Market    Float?   // tCO2e (market-based)
+  scope3Cat13     Float?   // tCO2e (aval)
+  energyIntensity Float?   // kWh/m²/an
+  breakdown       Json?    // Détail par énergie / bâtiment
+  confidence      Json?    // { high, medium, low } en %
+  methodology     String?
+  fileUrl         String?  // URL du PDF généré
+  signatureHash   String?  // SHA-256 du contenu
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============== BIM IMPORT JOBS ==============
+model BIMImportJob {
+  id              String    @id @default(uuid())
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  buildingId      String?
+  fileName        String
+  fileSize        Int?      // bytes
+  fileUrl         String?
+  status          String    @default("PENDING") // PENDING, PROCESSING, DONE, FAILED
+  progress        Int       @default(0)         // 0-100
+  totalElements   Int       @default(0)
+  parsedElements  Int       @default(0)
+  errors          Json?
+  modelId         String?   // Link to BIMModel once created
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============== BIM OPS - ANNOTATIONS PERSISTANTES ==============
+model BIMAnnotation {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  modelId     String
+  model       BIMModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  elementId   String?   // GUID IFC de l'élément annoté
+  assetId     String?
+  asset       Asset?    @relation(fields: [assetId], references: [id])
+  type        String    @default("NOTE") // NOTE, DEFECT, INSPECTION, MEASUREMENT
+  title       String
+  body        String?
+  attachments Json?
+  position    Json      // {x, y, z} dans l'espace 3D
+  resolved    Boolean   @default(false)
+  resolvedAt  DateTime?
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  history     BIMAnnotationHistory[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model BIMAnnotationHistory {
+  id           String        @id @default(uuid())
+  annotationId String
+  annotation   BIMAnnotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  change       String        // CREATED, UPDATED, RESOLVED
+  before       Json?
+  after        Json?
+  changedById  String
+  createdAt    DateTime      @default(now())
+}
+
+// ============== API PUBLIQUE V1 ==============
+model APIKey {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  keyHash     String    @unique  // SHA-256 de la clé réelle
+  prefix      String             // 8 premiers chars affichés
+  tier        String    @default("PUBLIC_READ") // PUBLIC_READ, PUBLIC_WRITE, PARTNER
+  rateLimit   Int       @default(60)            // req/min
+  scopes      Json                              // ["assets:read", "wo:write", ...]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Webhook {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  url         String
+  secret      String    // HMAC secret (chiffré)
+  events      Json      // ["wo.created", "asset.updated", ...]
+  active      Boolean   @default(true)
+  lastCalledAt DateTime?
+  lastStatus  Int?      // HTTP status du dernier appel
+  failCount   Int       @default(0)
+  deliveries  WebhookDelivery[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model WebhookDelivery {
+  id          String   @id @default(uuid())
+  webhookId   String
+  webhook     Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event       String
+  payload     Json
+  status      Int?     // HTTP status reçu
+  response    String?
+  duration    Int?     // ms
+  success     Boolean  @default(false)
+  deliveredAt DateTime @default(now())
+}
+
+// ============== IA GÉNÉRATIVE - RAG ==============
+model AISession {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId      String?
+  context     String   @default("GENERAL") // GENERAL, WO_SUMMARY, ASSET_DIAG, ESG
+  messages    Json     // Array of {role, content, timestamp}
+  tokenCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AssetDocument {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assetId     String?
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+  title       String
+  content     String   // Texte extrait (chunked)
+  chunkIndex  Int      @default(0)
+  source      String   // MANUAL, WO_HISTORY, TECHNICAL_DOC, MAINTENANCE_LOG
+  fileUrl     String?
+  // Note: embedding vector stocké dans pgvector via extension PostgreSQL
+  // ALTER TABLE "AssetDocument" ADD COLUMN embedding vector(1536);
+  embeddingModel String? // ex: text-embedding-3-small
+  embeddingAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============== IOT CONNECTORS ==============
+model IoTConnector {
+  id          String     @id @default(uuid())
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  protocol    String     // MQTT, BACNET, LORAWAN, MODBUS, OPC_UA
+  status      String     @default("INACTIVE") // ACTIVE, INACTIVE, ERROR
+  config      Json       // broker URL, port, credentials, topic patterns
+  lastSeenAt  DateTime?
+  readings    IoTReading[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model IoTReading {
+  id           String      @id @default(uuid())
+  connectorId  String
+  connector    IoTConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  assetId      String?
+  asset        Asset?      @relation(fields: [assetId], references: [id])
+  topic        String      // MQTT topic ou BACnet object ref
+  metric       String      // temperature, humidity, energy_kwh, co2_ppm, occupancy
+  value        Float
+  unit         String
+  quality      String      @default("GOOD") // GOOD, UNCERTAIN, BAD
+  readAt       DateTime
+  createdAt    DateTime    @default(now())
+
+  @@index([assetId, metric, readAt])
+  @@index([connectorId, readAt])
+}
+
+// ============== MARKETPLACE ==============
+model MarketplaceExtension {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  description  String
+  category     String   // ERP_CONNECTOR, IOT_SENSOR, GED, BI_TOOL, SECTOR_TEMPLATE
+  version      String
+  authorName   String
+  authorEmail  String
+  pricing      String   @default("FREE") // FREE, PAID
+  price        Float?
+  currency     String   @default("EUR")
+  logoUrl      String?
+  repoUrl      String?
+  docsUrl      String?
+  sandboxPassed Boolean @default(false)
+  signatureHash String? // SHA-256 du bundle
+  rating       Float?
+  reviewCount  Int      @default(0)
+  installCount Int      @default(0)
+  status       String   @default("PENDING") // PENDING, APPROVED, REJECTED, DEPRECATED
+  installs     ExtensionInstall[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ExtensionInstall {
+  id           String              @id @default(uuid())
+  tenantId     String
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  extensionId  String
+  extension    MarketplaceExtension @relation(fields: [extensionId], references: [id])
+  config       Json?               // Config spécifique au tenant
+  active       Boolean             @default(true)
+  installedAt  DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@unique([tenantId, extensionId])
+}
+
+// ============== WORKFLOW ENGINE NO-CODE ==============
+model WorkflowDefinition {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  // Trigger: event qui déclenche le workflow
+  triggerType String   // WO_CREATED, WO_COMPLETED, ASSET_ALERT, ESG_THRESHOLD, SCHEDULE, CONTRACT_EXPIRY
+  triggerConfig Json   // { eventType, filters, schedule (cron) }
+  // Conditions: logique booléenne sur attributs métier
+  conditions  Json?    // Array of { field, operator, value, logic (AND|OR) }
+  // Actions: liste ordonnée d'actions à exécuter
+  actions     Json     // Array of { type, config, order }
+  // Actions types: NOTIFY, CREATE_WO, UPDATE_STATUS, CALL_API, UPDATE_ASSET, SEND_EMAIL
+  rateLimit   Int?     // max executions/hour (protection)
+  versions    WorkflowVersion[]
+  executions  WorkflowExecution[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WorkflowVersion {
+  id           String             @id @default(uuid())
+  workflowId   String
+  workflow     WorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  version      Int
+  snapshot     Json               // Snapshot complet du workflow à cette version
+  changedById  String?
+  changeNote   String?
+  createdAt    DateTime           @default(now())
+
+  @@unique([workflowId, version])
+}
+
+model WorkflowExecution {
+  id           String             @id @default(uuid())
+  workflowId   String
+  workflow     WorkflowDefinition @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  triggeredBy  String             // SYSTEM, USER, SCHEDULE, WEBHOOK
+  triggerData  Json?              // Données de l'événement déclencheur
+  status       String             @default("PENDING") // PENDING, RUNNING, SUCCESS, FAILED, SKIPPED
+  startedAt    DateTime?
+  completedAt  DateTime?
+  duration     Int?               // ms
+  steps        WorkflowStep[]
+  error        String?
+  createdAt    DateTime           @default(now())
+}
+
+model WorkflowStep {
+  id           String            @id @default(uuid())
+  executionId  String
+  execution    WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  actionType   String
+  actionConfig Json
+  order        Int
+  status       String            @default("PENDING") // PENDING, SUCCESS, FAILED, SKIPPED
+  output       Json?
+  error        String?
+  executedAt   DateTime?
+  duration     Int?              // ms
+}
+
+// ============== RÉFÉRENTIELS SECTORIELS ==============
+model SectorTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  vertical    String   // RETAIL, SANTE, EDUCATION, INDUSTRIE, PUBLIC
+  description String
+  features    Json     // Liste des fonctionnalités incluses
+  workflows   Json?    // Workflows pré-configurés
+  checklistTemplates Json? // Templates de checklists WO sectoriels
+  reportTemplates    Json? // Templates de rapports réglementaires
+  pricing     String   @default("CORE") // CORE (inclus), PREMIUM
+  price       Float?
+  currency    String   @default("EUR")
+  active      Boolean  @default(true)
+  installs    SectorTemplateInstall[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SectorTemplateInstall {
+  id         String         @id @default(uuid())
+  tenantId   String
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  templateId String
+  template   SectorTemplate @relation(fields: [templateId], references: [id])
+  config     Json?          // Personnalisation tenant-specific
+  active     Boolean        @default(true)
+  installedAt DateTime      @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([tenantId, templateId])
+}

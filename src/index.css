@@ -1,0 +1,839 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-base-dark: #000000;
+  --color-base-light: #ffffff;
+  --color-surface-dark: #0a0a0a;
+  --color-surface-light: #f8fafc;
+  --color-border-default: #1e293b;
+  --color-border-light: #e2e8f0;
+
+  --color-brand-orange: #ff9a00;
+  --color-brand-cyan: #06b6d4;
+  --color-brand-emerald: #10b981;
+  --color-brand-amber: #f59e0b;
+  --color-brand-red: #ef4444;
+
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+:root {
+  --bg-base: #ffffff;
+  --bg-surface: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-color: #e2e8f0;
+}
+
+.dark, :root:has(.dark), html.dark, body.dark {
+  --bg-base: #020617;
+  --bg-surface: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #1e293b;
+}
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+}
+
+/* Antigravity Design System Helper Tokens */
+.antigravity-card {
+  background-color: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 41, 59, 0.85);
+  border-radius: 1rem;
+}
+
+.antigravity-card-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.antigravity-card-hover:hover {
+  border-color: rgba(255, 85, 0, 0.4);
+  box-shadow: 0 0 24px rgba(255, 85, 0, 0.12);
+}
+
+.antigravity-glass {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid #1e293b;
+}
+
+.antigravity-btn {
+  background-color: #ff9a00;
+  color: #ffffff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 14px rgba(255, 85, 0, 0.25);
+}
+.antigravity-btn:hover {
+  background-color: #ff6a1a;
+  box-shadow: 0 6px 20px rgba(255, 85, 0, 0.35);
+  transform: translateY(-1px);
+}
+.antigravity-btn:active {
+  transform: translateY(0);
+}
+
+.antigravity-btn-secondary {
+  background-color: rgba(15, 23, 42, 0.8);
+  color: #cbd5e1;
+  border: 1px solid #1e293b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.antigravity-btn-secondary:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+  border-color: #334155;
+}
+
+.antigravity-input {
+  background-color: #000000;
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  color: #ffffff;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.antigravity-input:focus {
+  border-color: #ff9a00;
+  box-shadow: 0 0 0 1px rgba(255, 85, 0, 0.3);
+}
+
+.antigravity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.antigravity-badge-brand {
+  background-color: rgba(255, 85, 0, 0.12);
+  color: #ff9a00;
+  border: 1px solid rgba(255, 85, 0, 0.3);
+}
+
+.antigravity-badge-success {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.antigravity-badge-warning {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.antigravity-badge-danger {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.antigravity-badge-tech {
+  background-color: rgba(6, 182, 212, 0.12);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(21, 16, 36, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 69, 79, 0.6);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(216, 180, 254, 0.4);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glowing effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(255, 85, 0, 0.25);
+}
+
+.glow-primary {
+  box-shadow: 0 4px 20px -5px rgba(0,0,0,0.08);
+}
+
+.glow-secondary {
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+.glow-subtle {
+  box-shadow: 0 0 20px rgba(216, 180, 254, 0.1);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 85, 0, 0.5);
+}
+
+.text-glow {
+  text-shadow: none;
+}
+
+.icon-glow {
+  filter: drop-shadow(0 0 8px rgba(255, 85, 0, 0.6));
+}
+
+.shadow-glow-orange {
+  box-shadow: 0 0 15px rgba(255, 85, 0, 0.4);
+}
+
+.shadow-card-glass {
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Glass panels */
+.glass-panel {
+  background: rgba(34, 28, 49, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(236, 215, 255, 0.08);
+}
+
+.glass-panel-elevated {
+  background: rgba(44, 39, 60, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(236, 215, 255, 0.14);
+}
+
+/* Material symbol styling helper */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+.material-symbols-outlined.fill-1 {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Keyframes */
+@keyframes spin-slow {
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.03); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 60s linear infinite;
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 4s ease-in-out infinite;
+}
+
+/* Form inputs for CAFM & Work Order Editor */
+.form-input {
+  width: 100%;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  color: #ffffff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  transition: border-color 0.15s ease-in-out;
+  outline: none;
+}
+.form-input:focus {
+  border-color: #f59e0b;
+}
+.form-input::placeholder {
+  color: #64748b;
+}
+textarea.form-input {
+  padding: 0.625rem 0.875rem;
+}
+
+/* Cyberpunk & Mission Control Design System (Images 1 & 2) */
+.circuit-pattern {
+  background: none;
+}
+
+.cyber-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+}
+
+.cyber-card:hover {
+  border-color: rgba(255, 157, 43, 0.55);
+  box-shadow: 0 0 25px rgba(255, 157, 43, 0.15), inset 0 1px 0 rgba(255, 209, 102, 0.3);
+}
+
+.cyber-card-glow {
+  border: 1px solid rgba(255, 85, 0, 0.3);
+  box-shadow: 0 0 15px rgba(255, 85, 0, 0.15);
+}
+
+.cyber-card-purple {
+  background: rgba(22, 14, 39, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.08);
+}
+
+.cyber-badge {
+  background: rgba(255, 157, 43, 0.12);
+  border: 1px solid rgba(255, 157, 43, 0.35);
+  color: #ffb04f;
+}
+
+.cyber-text-glow {
+  text-shadow: 0 0 12px rgba(255, 157, 43, 0.6);
+}
+
+.cyber-text-glow-purple {
+  text-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+}
+
+@keyframes energyWave {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-energy-wave {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-energy-wave::after {
+  display: none;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.scanline-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-effect::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   MODE GRIS (Vercel Style: Extreme Minimalist, Monochrome, Max 2-3 Colors)
+   ────────────────────────────────────────────────────────────────────────── */
+
+html.gray, 
+html.gray :root, 
+body.gray, 
+.gray {
+  --bg-base: #000000 !important;
+  --bg-surface: #000000 !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: #a0a0a0 !important;
+  --border-color: #333333 !important;
+  --brand-orange: #ffffff !important;
+  --brand-cyan: #ffffff !important;
+  --brand-emerald: #ffffff !important;
+  --brand-amber: #ffffff !important;
+  --brand-red: #ffffff !important;
+}
+
+/* Global Overrides for Vercel Aesthetic in Gray Mode */
+html.gray {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.gray body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* Reset all gradients, glow effects, patterns, and multi-color nodes */
+html.gray .glow-primary,
+html.gray .glow-secondary,
+html.gray .glow-subtle,
+html.gray .text-glow,
+html.gray .icon-glow,
+html.gray .shadow-glow-orange,
+html.gray .shadow-card-glass {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Circuit and scanlines are disabled in Vercel mode for ultra-minimalism */
+html.gray .circuit-pattern,
+html.gray .scanline-effect::before {
+  background: none !important;
+  display: none !important;
+}
+
+/* Container Cards, Panels, Drawers (Monochrome Flat panels with 1px border) */
+html.gray .antigravity-card,
+html.gray .antigravity-glass,
+html.gray .cyber-card,
+html.gray .cyber-card-purple,
+html.gray .glass-panel,
+html.gray .glass-panel-elevated,
+html.gray .bg-slate-900,
+html.gray .bg-slate-950,
+html.gray .bg-black,
+html.gray .bg-slate-900\/50,
+html.gray .bg-slate-900\/80,
+html.gray .bg-slate-900\/90,
+html.gray .bg-slate-900\/30,
+html.gray .bg-slate-900\/40,
+html.gray .bg-slate-800,
+html.gray .bg-slate-800\/50,
+html.gray .bg-gray-900,
+html.gray .bg-neutral-900,
+html.gray .bg-zinc-950,
+html.gray .bg-indigo-950,
+html.gray .bg-purple-950,
+html.gray .bg-emerald-950,
+html.gray .bg-slate-900\/70 {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+  border-color: #333333 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+/* Card Hovers (crisp clean transition, no glow) */
+html.gray .antigravity-card-hover:hover,
+html.gray .cyber-card:hover {
+  border-color: #ffffff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Vercel-style Buttons (Pure solid white, crisp text) */
+html.gray .antigravity-btn,
+html.gray .bg-orange-500,
+html.gray .bg-orange-600,
+html.gray .bg-indigo-600,
+html.gray .bg-purple-600,
+html.gray .bg-blue-600,
+html.gray .bg-brand-orange,
+html.gray .bg-amber-600,
+html.gray .bg-emerald-600,
+html.gray button.bg-slate-800,
+html.gray button.bg-slate-100 {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  box-shadow: none !important;
+  transition: all 0.1s ease !important;
+}
+
+html.gray .antigravity-btn:hover,
+html.gray .bg-orange-500:hover,
+html.gray .bg-orange-600:hover,
+html.gray .bg-indigo-600:hover,
+html.gray .bg-blue-600:hover,
+html.gray .bg-brand-orange:hover,
+html.gray .bg-emerald-600:hover,
+html.gray button.bg-slate-800:hover {
+  background-color: #eaeaea !important;
+  border-color: #eaeaea !important;
+  color: #000000 !important;
+}
+
+/* Secondary Buttons */
+html.gray .antigravity-btn-secondary,
+html.gray .border-slate-800,
+html.gray .border-slate-700,
+html.gray .border-slate-300,
+html.gray .bg-slate-800\/40,
+html.gray .bg-slate-800\/30 {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+  border-color: #333333 !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  box-shadow: none !important;
+}
+
+html.gray .antigravity-btn-secondary:hover,
+html.gray .antigravity-btn-secondary:focus {
+  background-color: #111111 !important;
+  border-color: #555555 !important;
+}
+
+/* Crisp form components */
+html.gray input,
+html.gray select,
+html.gray textarea,
+html.gray .antigravity-input,
+html.gray .form-input {
+  background-color: #000000 !important;
+  background: #000000 !important;
+  border: 1px solid #333333 !important;
+  border-color: #333333 !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+  font-size: 0.875rem !important;
+}
+
+html.gray input:focus,
+html.gray select:focus,
+html.gray textarea:focus,
+html.gray .antigravity-input:focus,
+html.gray .form-input:focus {
+  border-color: #ffffff !important;
+  outline: none !important;
+}
+
+/* Flat minimalist gray Badges */
+html.gray .antigravity-badge,
+html.gray .antigravity-badge-brand,
+html.gray .antigravity-badge-success,
+html.gray .antigravity-badge-warning,
+html.gray .antigravity-badge-danger,
+html.gray .antigravity-badge-tech,
+html.gray .cyber-badge,
+html.gray .bg-slate-800\/50,
+html.gray .bg-orange-500\/10,
+html.gray .bg-emerald-500\/10,
+html.gray .bg-red-500\/10,
+html.gray .bg-amber-500\/10,
+html.gray .bg-blue-500\/10,
+html.gray .bg-indigo-500\/10 {
+  background-color: #111111 !important;
+  background: #111111 !important;
+  color: #ffffff !important;
+  border: 1px solid #333333 !important;
+  border-color: #333333 !important;
+  border-radius: 4px !important;
+  font-family: inherit !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* Color Palette Reductions to black and white */
+html.gray .text-white,
+html.gray .text-slate-100,
+html.gray .text-slate-200,
+html.gray .text-slate-300,
+html.gray .text-slate-50,
+html.gray .text-gray-100,
+html.gray .text-gray-200,
+html.gray .text-neutral-100 {
+  color: #ffffff !important;
+}
+
+html.gray .text-slate-400,
+html.gray .text-slate-500,
+html.gray .text-gray-400,
+html.gray .text-gray-500,
+html.gray .text-neutral-400,
+html.gray .text-neutral-500,
+html.gray .text-zinc-400,
+html.gray .text-zinc-500 {
+  color: #a0a0a0 !important;
+}
+
+html.gray .text-orange-500,
+html.gray .text-orange-400,
+html.gray .text-brand-orange,
+html.gray .text-amber-500,
+html.gray .text-amber-600,
+html.gray .text-indigo-400,
+html.gray .text-indigo-500,
+html.gray .text-blue-500,
+html.gray .text-blue-400,
+html.gray .text-emerald-500,
+html.gray .text-emerald-400 {
+  color: #ffffff !important;
+}
+
+html.gray .border,
+html.gray .border-slate-800,
+html.gray .border-slate-700,
+html.gray .border-slate-200,
+html.gray .border-slate-100,
+html.gray .border-gray-800,
+html.gray .border-gray-200,
+html.gray .border-zinc-800,
+html.gray .divide-y > * {
+  border-color: #333333 !important;
+}
+
+/* Specific Header & Sticky Menu minimalist adjustments */
+html.gray header,
+html.gray .bg-slate-950\/80,
+html.gray .bg-slate-900\/80 {
+  background-color: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+  border-bottom: 1px solid #333333 !important;
+}
+
+html.gray footer {
+  background-color: #000000 !important;
+  border-top: 1px solid #333333 !important;
+}
+
+/* Charts adjustment for monochrome palette */
+html.gray .recharts-cartesian-grid-horizontal line,
+html.gray .recharts-cartesian-grid-vertical line {
+  stroke: #333333 !important;
+}
+html.gray .recharts-legend-item-text {
+  color: #ffffff !important;
+}
+
+html.gray svg {
+  stroke: currentColor !important;
+}
+
+html.gray svg.text-orange-500,
+html.gray svg.text-emerald-500,
+html.gray svg.text-blue-500,
+html.gray svg.text-red-500,
+html.gray svg.text-amber-500 {
+  color: #ffffff !important;
+}
+
+html.gray .recharts-area,
+html.gray .recharts-bar-rectangles path,
+html.gray .recharts-rectangle,
+html.gray .recharts-curve {
+  fill: #222222 !important;
+  stroke: #ffffff !important;
+}
+
+/* Ensure the QR scanner container #reader is fully responsive and avoids overflow on mobile devices */
+#reader {
+  width: 100% !important;
+  max-width: 240px !important;
+  height: 240px !important;
+  margin: 0 auto !important;
+  overflow: hidden !important;
+  border-radius: 1.5rem !important;
+  position: relative !important;
+}
+
+#reader video {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  object-fit: cover !important;
+  border-radius: 1.5rem !important;
+}
+
+#reader img {
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* Apply media queries to ensure the scanner container respects mobile viewport constraints and avoids overflow issues when initializing the camera */
+@media (max-width: 640px) {
+  #reader {
+    max-width: 200px !important;
+    height: 200px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  #reader {
+    max-width: 180px !important;
+    height: 180px !important;
+  }
+}
+
+
+
+
+/* 
+ * ============================================================================
+ * Electric Gold Design System & Theme Mode Support
+ * - Dark mode: Pure black background (#000000) with glowing electric gold accents
+ * - Light mode: Pure white background (#ffffff) with crisp contrast and clean borders
+ * ============================================================================
+ */
+
+/* Dark mode electric styling */
+html.dark .vercel-ui,
+.dark .vercel-ui {
+  --bg-base: #000000;
+  --bg-surface: #0a0a0a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: rgba(245, 158, 11, 0.35);
+  background-color: #000000;
+  color: #f8fafc;
+}
+
+/* Light mode clean white styling */
+html:not(.dark) .vercel-ui,
+.light .vercel-ui {
+  --bg-base: #ffffff;
+  --bg-surface: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-color: #e2e8f0;
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+/* Force Electric Gold Border accents across dashboard containers & cards in dark mode only */
+html.dark .vercel-ui .border-slate-800,
+html.dark .vercel-ui .border-gray-800,
+html.dark .vercel-ui .border-neutral-800,
+html.dark .vercel-ui .border-zinc-800 {
+  border-color: rgba(245, 158, 11, 0.28) !important;
+}
+
+/* Hover effects on cards with electric gold subtle glow in dark mode */
+html.dark .vercel-ui .antigravity-card,
+html.dark .vercel-ui [class*="rounded-2xl"].border,
+html.dark .vercel-ui [class*="rounded-xl"].border {
+  border-color: rgba(245, 158, 11, 0.32);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.06);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.dark .vercel-ui .antigravity-card:hover,
+html.dark .vercel-ui [class*="rounded-2xl"].border:hover,
+html.dark .vercel-ui [class*="rounded-xl"].border:hover {
+  border-color: rgba(245, 158, 11, 0.75) !important;
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.22) !important;
+}
+
+/* ============================================================================
+ * Electric Gold Button Click & Active State Glowing Shadow
+ * ============================================================================
+ */
+.vercel-ui button,
+.vercel-ui a,
+.vercel-ui [role="button"] {
+  transition: all 0.15s ease;
+}
+
+/* Click & Active state: Electric Gold Glow Shadow */
+html.dark .vercel-ui button:active,
+html.dark .vercel-ui a:active,
+html.dark .vercel-ui [role="button"]:active,
+html.dark .vercel-ui button:focus-visible,
+html.dark button:active {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.8), 0 0 40px rgba(251, 191, 36, 0.45) !important;
+  transform: scale(0.975);
+}
+
+html:not(.dark) .vercel-ui button:active,
+html:not(.dark) .vercel-ui a:active,
+html:not(.dark) .vercel-ui [role="button"]:active,
+html:not(.dark) button:active {
+  transform: scale(0.975);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Specific active sidebar item overrides ensuring absolute visibility in dark mode */
+html.dark .vercel-ui button.sidebar-item-active {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  border-color: #f59e0b !important;
+  color: #fef08a !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.3) !important;
+}
+
+html.dark .vercel-ui button.sidebar-item-active span {
+  color: #fef08a !important;
+}
+
+/* Global scrollbar */
+html.dark .vercel-ui ::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.35);
+  border-radius: 9999px;
+}
+html.dark .vercel-ui ::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.7);
+}
+

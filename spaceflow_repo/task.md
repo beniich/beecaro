@@ -1,0 +1,16 @@
+- [x] Schema Prisma etendu avec ERPConnection, ERPSyncLog, ERPAssetMapping, ERPInvoice, BIMModel, BIMElement, BIMProperty
+- [x] npx prisma@5.10.0 db push → DB synchronisee avec succes
+- [x] Nettoyage des caracteres non-ASCII dans schema.prisma
+- [x] npx prisma@5.10.0 generate → Client Prisma regenere avec succes
+- [x] Service Odoo XML-RPC backend dependance `xmlrpc` installée
+- [x] Connecteurs ERP ecrits : base.connector, sap.connector, oracle.connector, dynamics.connector, odoo.connector
+- [x] Service ERP & controleur & routes backend integres
+- [x] Parser IFC backend & service BIM & controleur & routes integres
+- [x] server.js mis a jour avec routes erp et routes bim
+- [x] Dependance frontend `three` (Three.js) installee
+- [x] Service API client frontend erp.service.js & bim.service.js crees
+- [x] Composant visualiseur 3D Three.js ModelViewer3D.jsx cree
+- [x] Composants ElementTree.jsx, PropertyPanel.jsx, BimDashboard.jsx crees
+- [x] Pages ERPIntegration.jsx et BIMViewer.jsx crees
+- [x] Enregistrement dans App.jsx et Layout.jsx (navigation)
+- [x] Verification build et lancement local de l'application

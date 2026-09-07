@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.dist
+*.log
+*.sqlite3
+.env
+.env.*
+!.env.example
+
+# Poetry
+poetry.lock
+
+# Node / Vite
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+/.pnp.*
+/.cache/
+.vite/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+cpanel-build/
+.DS_Store
+Thumbs.db
+
+# Specific to this project
+debugger.db
+
+# Cloudflare / cPanel deploy secrets
+.cloudflare.env
+cpanel.env
+
+# Archives de build
+cpanel-build-windows.zip
+*.zip
+
+# Fichiers compilés TypeScript (tests backend - ne pas versionner)
+backend/test-*.js
+backend/test-*.d.ts
+backend/test-*.d.ts.map
+backend/tests/*.js
+backend/tests/*.d.ts
+backend/tests/*.d.ts.map

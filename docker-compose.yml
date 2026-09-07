@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL locale (alternative à Neon Serverless)
+  postgres:
+    image: postgres:16-alpine
+    container_name: beecarbonat-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: beecarbonat
+      POSTGRES_PASSWORD: beecarbonat_secret
+      POSTGRES_DB: beecarbonat_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beecarbonat -d beecarbonat_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache Redis pour sessions et télémétrie rapide
+  redis:
+    image: redis:7-alpine
+    container_name: beecarbonat-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Application BeeCarbonat (Frontend Vite + Backend Express API)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: beecarbonat-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://beecarbonat:beecarbonat_secret@postgres:5432/beecarbonat_db
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pgdata:
+  redisdata:

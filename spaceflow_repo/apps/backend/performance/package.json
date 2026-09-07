@@ -1,0 +1,13 @@
+{
+  "name": "cafm-perf-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test:load": "k6 run --out json=results/load-$(date +%Y%m%d).json performance/k6-load-test.js",
+    "test:stress": "k6 run performance/k6-stress-test.js",
+    "test:soak": "k6 run --duration 1h performance/k6-soak-test.js",
+    "test:dashboard": "K6_WEB_DASHBOARD=true k6 run --out web-dashboard performance/k6-load-test.js"
+  },
+  "devDependencies": {
+    "k6": "^0.49.0"
+  }
+}

@@ -1,0 +1,59 @@
+name: Security Audit
+
+on:
+  schedule:
+    # Tous les lundis à 08h00 UTC
+    - cron: '0 8 * * 1'
+  push:
+    paths:
+      - '**/package.json'
+      - 'bun.lock'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Dependency audit — ${{ matrix.workspace }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [frontend, backend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: npm audit — ${{ matrix.workspace }}
+        run: npm audit --audit-level=high --prefix ${{ matrix.workspace }}
+        continue-on-error: true
+
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  dependency-review:
+    name: Dependency Review (PRs)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
