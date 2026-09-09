@@ -10,52 +10,26 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: { enabled: true, type: 'module' },
-      manifest: {
-        id: '/',
-        name: 'BeeCarbonat Enterprise',
-        short_name: 'BeeCarbonat',
-        description: 'CAFM & ESG Operations',
-        theme_color: '#0f172a',
-        background_color: '#ffffff',
-        display: 'standalone',
-        start_url: '/',
-        scope: '/',
-        icons: [
-          {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any'
-          },
-          {
-            src: '/pwa-maskable-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
-      },
+      devOptions: { enabled: false },
       workbox: {
-        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        maximumFileSizeToCacheInBytes: 30 * 1024 * 1024,
       }
     })
   ],
   build: {
-    chunkSizeWarningLimit: 3000,
+    target: 'esnext',
+    minify: false,
+    chunkSizeWarningLimit: 10000,
+    sourcemap: false,
+    reportCompressedSize: false,
     rollupOptions: {
+      maxParallelFileOps: 1,
       output: {
         manualChunks: {
-          three: ['three'],
-          'web-ifc': ['web-ifc', 'web-ifc-three'],
-          vendor: ['react', 'react-dom', 'lucide-react']
+          'vendor-three': ['three'],
+          'vendor-web-ifc': ['web-ifc', 'web-ifc-three'],
+          'vendor-charts': ['recharts', 'd3-array', 'd3-scale'],
+          'vendor-pdf': ['jspdf', 'jspdf-autotable']
         }
       }
     }
@@ -64,6 +38,12 @@ export default defineConfig({
     port: 3000,
     host: '0.0.0.0',
     strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      }
+    }
   },
   preview: {
     port: 3000,

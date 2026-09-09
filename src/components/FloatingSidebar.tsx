@@ -63,28 +63,28 @@ export const FloatingSidebar: React.FC<FloatingSidebarProps> = ({
   ];
 
   return (
-    <aside className="fixed left-4 top-24 bottom-6 w-64 bg-[#130f22]/70 backdrop-blur-2xl border border-[#ff9d2b]/20 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.5),0_0_20px_rgba(255,157,43,0.1)] flex flex-col overflow-hidden z-40 transition-all hover:border-[#ff9d2b]/40 hover:bg-[#130f22]/85">
-      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-6 px-4 space-y-8">
+    <aside className="fixed left-3 top-20 bottom-4 w-60 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg flex flex-col overflow-hidden z-40 transition-all">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-3 px-2.5 space-y-4">
         {menuCategories.map((category, idx) => (
           <div key={idx}>
-            <h3 className="text-[10px] font-mono text-[#ff9d2b]/70 font-bold tracking-widest uppercase mb-3 pl-2">
+            <h3 className="text-[9px] font-mono text-slate-400 dark:text-zinc-500 font-bold tracking-widest uppercase mb-1.5 pl-1.5">
               {category.title}
             </h3>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5">
               {category.items.map((item) => {
                 const isActive = currentPage === item.id;
                 return (
                   <li key={item.id}>
                     <button
                       onClick={() => onNavigate(item.id as any)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all text-sm font-medium ${
+                      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors text-xs font-medium ${
                         isActive
-                          ? 'bg-[#ff9d2b]/15 text-[#ffc06e] border border-[#ff9d2b]/40 shadow-[inset_0_0_15px_rgba(255,157,43,0.15)]'
-                          : 'text-[#cdc3d0] hover:text-[#fff] hover:bg-[#251d38]/50 border border-transparent'
+                          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30'
+                          : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-900 border border-transparent'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                      <span className="truncate">{item.label}</span>
+                      <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
+                      <span className="truncate text-xs">{item.label}</span>
                     </button>
                   </li>
                 );
@@ -95,32 +95,32 @@ export const FloatingSidebar: React.FC<FloatingSidebarProps> = ({
       </div>
       
       {/* Bottom Floating Telemetry */}
-      <div className="p-4 border-t border-[#ff9d2b]/20 bg-[#0d0a17]/50 backdrop-blur-md">
+      <div className="p-2.5 border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#34d399] animate-pulse"></span>
-            <span className="text-[10px] font-mono font-bold text-[#34d399] uppercase tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[9px] font-mono font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-wider">
               {lang === 'fr' ? 'En Ligne' : 'Online'}
             </span>
           </div>
-          <span className="text-[10px] font-mono text-[#cdc3d0]">{lang === 'fr' ? 'SYSTÈME SYNCHRO' : 'SYSTEM SYNCHRONIZED'}</span>
+          <span className="text-[9px] font-mono text-slate-400 dark:text-zinc-500">{lang === 'fr' ? 'SYNCHRONISÉ' : 'SYNCHRONIZED'}</span>
         </div>
       </div>
       
       {/* Custom Scrollbar CSS embedded */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+          width: 3px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 157, 43, 0.2);
-          border-radius: 4px;
+          background: rgba(100, 116, 139, 0.2);
+          border-radius: 3px;
         }
         .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-          background: rgba(255, 157, 43, 0.4);
+          background: rgba(100, 116, 139, 0.4);
         }
       `}</style>
     </aside>

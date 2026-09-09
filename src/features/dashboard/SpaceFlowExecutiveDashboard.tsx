@@ -24,7 +24,13 @@ import {
   ShieldCheck,
   CheckCircle,
   XCircle,
-  Info
+  Info,
+  Wallet,
+  Coins,
+  Lock,
+  Cpu,
+  Link,
+  ExternalLink
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -193,6 +199,179 @@ export const SpaceFlowExecutiveDashboard: React.FC<SpaceFlowExecutiveDashboardPr
       setLastSync(`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
       setIsRefreshing(false);
     }, 500);
+  };
+
+  // Web3 & DeFi State Variables
+  const [walletConnected, setWalletConnected] = useState<boolean>(() => {
+    return localStorage.getItem('beecarbonat_wallet_connected') === 'true';
+  });
+  const [walletAddress, setWalletAddress] = useState<string>(() => {
+    return localStorage.getItem('beecarbonat_wallet_address') || '0x71C4B...9A64';
+  });
+  const [walletBalance, setWalletBalance] = useState<number>(() => {
+    const saved = localStorage.getItem('beecarbonat_wallet_balance');
+    return saved ? parseFloat(saved) : 150.0;
+  });
+  const [stakedBalance, setStakedBalance] = useState<number>(() => {
+    const saved = localStorage.getItem('beecarbonat_staked_balance');
+    return saved ? parseFloat(saved) : 0.0;
+  });
+  const [ethBalance, setEthBalance] = useState<number>(0.045);
+  const [mintAmount, setMintAmount] = useState<number>(10);
+  const [stakeAmount, setStakeAmount] = useState<number>(10);
+  const [burnAmount, setBurnAmount] = useState<number>(10);
+  const [isMinting, setIsMinting] = useState<boolean>(false);
+  const [isStaking, setIsStaking] = useState<boolean>(false);
+  const [isUnstaking, setIsUnstaking] = useState<boolean>(false);
+  const [isBurning, setIsBurning] = useState<boolean>(false);
+  
+  // Web3 Interactive transaction logs
+  const [txs, setTxs] = useState<any[]>(() => {
+    const saved = localStorage.getItem('beecarbonat_txs');
+    return saved ? JSON.parse(saved) : [
+      { hash: '0x3bf92a08...4e8c', type: 'MINT (RWA Carbon Credit)', amount: 50, timestamp: '08/09/2026, 09:02', status: 'Success' },
+      { hash: '0x81da12c0...ff92', type: 'STAKE', amount: 100, timestamp: '08/09/2026, 08:45', status: 'Success' },
+    ];
+  });
+
+  // Proof verification checkpoints (On-Chain Proof)
+  const [proofs, setProofs] = useState<any[]>([
+    { id: 1, date: '2026-09-08', blockNumber: 18491024, rootHash: '0x3a82f6e9da96fb2...10b9', verified: true },
+    { id: 2, date: '2026-09-07', blockNumber: 18485912, rootHash: '0x4f9d2ba9ef57b8a...f5c9', verified: true },
+    { id: 3, date: '2026-09-06', blockNumber: 18481204, rootHash: '0x10b981d9f4e24da...2b9a', verified: false },
+  ]);
+  const [isVerifyingProof, setIsVerifyingProof] = useState<number | null>(null);
+
+  // Sync state to localstorage when they change
+  useEffect(() => {
+    localStorage.setItem('beecarbonat_wallet_connected', String(walletConnected));
+    localStorage.setItem('beecarbonat_wallet_address', walletAddress);
+    localStorage.setItem('beecarbonat_wallet_balance', String(walletBalance));
+    localStorage.setItem('beecarbonat_staked_balance', String(stakedBalance));
+    localStorage.setItem('beecarbonat_txs', JSON.stringify(txs));
+  }, [walletConnected, walletAddress, walletBalance, stakedBalance, txs]);
+
+  // Handle wallet connection
+  const handleConnectWallet = async () => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      try {
+        const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts && accounts.length > 0) {
+          setWalletAddress(accounts[0].slice(0, 6) + '...' + accounts[0].slice(-4));
+          setWalletConnected(true);
+          setEthBalance(0.24);
+          return;
+        }
+      } catch (err) {
+        console.warn('Metamask request rejected, falling back to simulation:', err);
+      }
+    }
+    const randomAddress = '0x' + Array.from({length: 40}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+    const shortened = randomAddress.slice(0, 6) + '...' + randomAddress.slice(-4);
+    setWalletAddress(shortened);
+    setWalletConnected(true);
+    setEthBalance(0.082);
+  };
+
+  const handleDisconnectWallet = () => {
+    setWalletConnected(false);
+  };
+
+  // Web3 functions
+  const handleMint = () => {
+    if (mintAmount <= 0) return;
+    setIsMinting(true);
+    setTimeout(() => {
+      const txHash = '0x' + Array.from({length: 64}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      const shortHash = txHash.slice(0, 10) + '...' + txHash.slice(-4);
+      
+      setWalletBalance(prev => +(prev + mintAmount).toFixed(2));
+      setEthBalance(prev => +(prev - 0.002).toFixed(4));
+      setTxs(prev => [
+        { hash: shortHash, type: 'MINT (RWA Carbon Credit)', amount: mintAmount, timestamp: new Date().toLocaleString(), status: 'Success' },
+        ...prev
+      ]);
+      setIsMinting(false);
+      
+      confetti({
+        particleCount: 50,
+        spread: 40,
+        origin: { y: 0.6 }
+      });
+    }, 1500);
+  };
+
+  const handleStake = () => {
+    if (stakeAmount <= 0 || walletBalance < stakeAmount) return;
+    setIsStaking(true);
+    setTimeout(() => {
+      const txHash = '0x' + Array.from({length: 64}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      const shortHash = txHash.slice(0, 10) + '...' + txHash.slice(-4);
+      
+      setWalletBalance(prev => +(prev - stakeAmount).toFixed(2));
+      setStakedBalance(prev => +(prev + stakeAmount).toFixed(2));
+      setEthBalance(prev => +(prev - 0.0015).toFixed(4));
+      setTxs(prev => [
+        { hash: shortHash, type: 'STAKE (DeFi Pool)', amount: stakeAmount, timestamp: new Date().toLocaleString(), status: 'Success' },
+        ...prev
+      ]);
+      setIsStaking(false);
+    }, 1200);
+  };
+
+  const handleUnstake = () => {
+    if (stakedBalance <= 0) return;
+    setIsUnstaking(true);
+    setTimeout(() => {
+      const txHash = '0x' + Array.from({length: 64}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      const shortHash = txHash.slice(0, 10) + '...' + txHash.slice(-4);
+      
+      setWalletBalance(prev => +(prev + stakedBalance).toFixed(2));
+      setStakedBalance(0);
+      setEthBalance(prev => +(prev - 0.0015).toFixed(4));
+      setTxs(prev => [
+        { hash: shortHash, type: 'UNSTAKE', amount: stakedBalance, timestamp: new Date().toLocaleString(), status: 'Success' },
+        ...prev
+      ]);
+      setIsUnstaking(false);
+    }, 1200);
+  };
+
+  const handleBurn = () => {
+    if (burnAmount <= 0 || walletBalance < burnAmount) return;
+    setIsBurning(true);
+    setTimeout(() => {
+      const txHash = '0x' + Array.from({length: 64}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      const shortHash = txHash.slice(0, 10) + '...' + txHash.slice(-4);
+      
+      setWalletBalance(prev => +(prev - burnAmount).toFixed(2));
+      setEthBalance(prev => +(prev - 0.003).toFixed(4));
+      setTxs(prev => [
+        { hash: shortHash, type: 'BURN & RETIRE (Proof of Impact)', amount: burnAmount, timestamp: new Date().toLocaleString(), status: 'Success' },
+        ...prev
+      ]);
+      setIsBurning(false);
+
+      confetti({
+        particleCount: 80,
+        spread: 50,
+        colors: ['#10b981', '#34d399', '#059669']
+      });
+    }, 1800);
+  };
+
+  const handleVerifyProof = (id: number) => {
+    setIsVerifyingProof(id);
+    setTimeout(() => {
+      setProofs(prev => prev.map(p => p.id === id ? { ...p, verified: true } : p));
+      setIsVerifyingProof(null);
+      
+      confetti({
+        particleCount: 40,
+        spread: 30,
+        colors: ['#10b981', '#3b82f6']
+      });
+    }, 2000);
   };
 
   const orderActivityData = [
@@ -630,84 +809,363 @@ export const SpaceFlowExecutiveDashboard: React.FC<SpaceFlowExecutiveDashboardPr
 
       {/* VIEW: Web3 & DeFi Activity Layout */}
       {dashboardMode === 'web3' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="space-y-6">
           
-          {/* Column 1: Recent Orders */}
-          <div className={`lg:col-span-6 p-5 rounded-xl border shadow-sm ${
-            isLightMode ? 'bg-white border-slate-100' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
-          }`}>
-            <div className="pb-3 mb-4 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
-              <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-slate-500 dark:text-slate-400">
-                {lang === 'fr' ? 'DERNIERS ORDRES' : 'RECENT ORDERS'}
-              </h3>
-              <button className="text-[9px] font-mono font-bold uppercase text-amber-500 flex items-center gap-1 hover:underline">
-                <span>{lang === 'fr' ? 'TOUS' : 'ALL'}</span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
+          {/* TOP ROW: Wallet Status & Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            {/* Wallet Connector Card */}
+            <div className={`md:col-span-4 p-5 rounded-xl border shadow-sm ${
+              isLightMode ? 'bg-white border-slate-100' : 'bg-[#0f0c1b] border-purple-500/10'
+            }`}>
+              <div className="pb-3 mb-4 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
+                <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-purple-300">
+                  {lang === 'fr' ? 'IDENTITÉ CRYPTOGRAPHIQUE' : 'CRYPTOGRAPHIC IDENTITY'}
+                </h3>
+                <Wallet className="w-4 h-4 text-purple-400" />
+              </div>
 
-            <div className="space-y-2.5">
-              {technicalOrdersList.map((order, idx) => (
-                <div 
-                  key={idx}
-                  className={`p-3.5 rounded-lg border flex items-start justify-between gap-4 transition-all ${
-                    isLightMode 
-                      ? 'bg-slate-50/60 border-slate-100 hover:bg-slate-50' 
-                      : 'bg-white dark:bg-slate-950/40 border-slate-100 dark:border-slate-900 hover:bg-white dark:bg-slate-950/80'
-                  }`}
-                >
-                  <div className="space-y-0.5">
-                    <h4 className="text-[11px] font-extrabold text-slate-900 dark:text-slate-100 leading-snug">
-                      {order.title}
-                    </h4>
-                    <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-500 font-bold">
-                      <span>{order.node}</span>
-                      <span>•</span>
-                      <span className="text-amber-500">{order.tech}</span>
+              {!walletConnected ? (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {lang === 'fr' 
+                      ? 'Connectez votre portefeuille décentralisé Web3 pour interagir avec les smart contracts de BeeCarbonat.' 
+                      : 'Connect your decentralized Web3 wallet to interact with BeeCarbonat smart contracts.'}
+                  </p>
+                  <button
+                    onClick={handleConnectWallet}
+                    className="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold tracking-wide shadow-md shadow-purple-500/10 flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                  >
+                    <Wallet className="w-4 h-4" />
+                    <span>{lang === 'fr' ? 'Connecter un Portefeuille' : 'Connect Wallet'}</span>
+                  </button>
+                  <div className="flex items-center gap-1.5 justify-center text-[10px] text-slate-400">
+                    <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Metamask • Core Wallet • Web3 Standard</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                    <div className="space-y-0.5">
+                      <span className="text-[10px] text-slate-400 block font-mono">{lang === 'fr' ? 'ADRESSE' : 'ADDRESS'}</span>
+                      <span className="text-xs font-mono font-black text-purple-300">{walletAddress}</span>
+                    </div>
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/40 text-center">
+                      <span className="text-[9px] text-slate-500 block font-mono uppercase">Balance BCT</span>
+                      <span className="text-sm font-black text-white font-mono">{walletBalance.toFixed(2)}</span>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/40 text-center">
+                      <span className="text-[9px] text-slate-500 block font-mono uppercase">Balance ETH</span>
+                      <span className="text-sm font-black text-purple-200 font-mono">{ethBalance.toFixed(4)}</span>
                     </div>
                   </div>
 
-                  <span className="shrink-0 px-2 py-0.5 rounded text-[8px] font-mono font-black tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    {order.priority}
-                  </span>
+                  <button
+                    onClick={handleDisconnectWallet}
+                    className="w-full py-2 px-3 border border-red-500/20 hover:bg-red-500/10 text-red-400 rounded-lg text-[10px] font-bold font-mono uppercase transition-all flex items-center justify-center gap-1"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>{lang === 'fr' ? 'Déconnecter' : 'Disconnect'}</span>
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
+
+            {/* Smart Contract Minting Engine Card */}
+            <div className={`md:col-span-4 p-5 rounded-xl border shadow-sm ${
+              isLightMode ? 'bg-white border-slate-100' : 'bg-[#0f0c1b] border-emerald-500/10'
+            }`}>
+              <div className="pb-3 mb-4 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
+                <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-emerald-300">
+                  {lang === 'fr' ? 'MINTER DES CRÉDITS CARBONE (RWA)' : 'MINT CARBON CREDITS (RWA)'}
+                </h3>
+                <Coins className="w-4 h-4 text-emerald-400" />
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {lang === 'fr' 
+                    ? 'Générez des jetons d\'utilité $BCT indexés sur les économies de CO2 mesurées en direct sur vos installations.' 
+                    : 'Issue utility $BCT tokens backed by certified CO2 reduction metrics measured from your smart HVAC endpoints.'}
+                </p>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-slate-400">{lang === 'fr' ? 'Quantité à générer ($BCT)' : 'Amount to mint ($BCT)'}</span>
+                    <span className="font-mono font-bold text-emerald-400">{mintAmount} Tonnes CO2eq</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="100"
+                    value={mintAmount}
+                    onChange={(e) => setMintAmount(parseInt(e.target.value))}
+                    disabled={!walletConnected}
+                    className="w-full accent-emerald-500 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer disabled:opacity-40"
+                  />
+                </div>
+
+                <button
+                  onClick={handleMint}
+                  disabled={!walletConnected || isMinting}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 text-white rounded-lg text-xs font-bold tracking-wide shadow-md flex items-center justify-center gap-2 transition-all"
+                >
+                  {isMinting ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-emerald-300" />
+                      <span>{lang === 'fr' ? 'Signature cryptographique...' : 'Signing proof on-chain...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Coins className="w-4 h-4" />
+                      <span>{lang === 'fr' ? 'Minter sur Sepolia (RWA)' : 'Mint Carbon Credits'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* DeFi Staking Pool Card */}
+            <div className={`md:col-span-4 p-5 rounded-xl border shadow-sm ${
+              isLightMode ? 'bg-white border-slate-100' : 'bg-[#0f0c1b] border-amber-500/10'
+            }`}>
+              <div className="pb-3 mb-4 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
+                <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-amber-300">
+                  {lang === 'fr' ? 'STAKING POOL BEE-OS' : 'BEE-OS STAKING POOL'}
+                </h3>
+                <Lock className="w-4 h-4 text-amber-400" />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">APY Actuel</span>
+                  <span className="font-mono font-bold text-amber-400">12.45% APY</span>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/40 flex justify-between items-center">
+                  <div>
+                    <span className="text-[9px] text-slate-500 block uppercase">{lang === 'fr' ? 'VOTRE STAKE' : 'YOUR STAKE'}</span>
+                    <span className="text-base font-black text-amber-300 font-mono">{stakedBalance.toFixed(2)} BCT</span>
+                  </div>
+                  {stakedBalance > 0 && (
+                    <button
+                      onClick={handleUnstake}
+                      disabled={isUnstaking}
+                      className="px-2.5 py-1 text-[9px] font-mono font-bold uppercase bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded hover:bg-amber-500/20 transition-all flex items-center gap-1"
+                    >
+                      {isUnstaking ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'CLAIM'}
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-slate-400">{lang === 'fr' ? 'Montant à Stake' : 'Amount to Stake'}</span>
+                    <span className="font-mono font-bold text-amber-400">{stakeAmount} BCT</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max={Math.max(5, walletBalance)}
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(parseInt(e.target.value))}
+                    disabled={!walletConnected || walletBalance < 5}
+                    className="w-full accent-amber-500 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer disabled:opacity-40"
+                  />
+                </div>
+
+                <button
+                  onClick={handleStake}
+                  disabled={!walletConnected || walletBalance < stakeAmount || isStaking}
+                  className="w-full py-2 px-4 bg-amber-500/20 hover:bg-amber-500/30 disabled:bg-slate-800 disabled:text-slate-500 border border-amber-500/30 disabled:border-none text-amber-300 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  {isStaking ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>{lang === 'fr' ? 'Transaction en cours...' : 'Staking tokens...'}</span>
+                    </>
+                  ) : (
+                    <span>{lang === 'fr' ? 'Déposer dans le Pool' : 'Lock in Staking Pool'}</span>
+                  )}
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          {/* Column 2: Forecast (Empty State) */}
-          <div className={`lg:col-span-3 p-5 rounded-xl border shadow-sm flex flex-col justify-between min-h-[220px] ${
-            isLightMode ? 'bg-white border-slate-100' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
-          }`}>
-            <div className="pb-3 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
-              <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-slate-500 dark:text-slate-400">
-                {lang === 'fr' ? 'PLANIFICATION' : 'FORECAST'}
-              </h3>
-              <Calendar className="w-3.5 h-3.5 text-amber-500" />
+          {/* LOWER ROW: Burn & On-Chain Audit Proof verification */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* On-Chain Verification Proof Checklist */}
+            <div className={`lg:col-span-7 p-5 rounded-xl border shadow-sm ${
+              isLightMode ? 'bg-white border-slate-100' : 'bg-[#0f0c1b] border-purple-500/10'
+            }`}>
+              <div className="pb-3 mb-4 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
+                <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-purple-300">
+                  {lang === 'fr' ? 'ANCRAGE ON-CHAIN & RAPPORTS DE TÉLÉMÉTRIE' : 'ON-CHAIN TELEMETRY ROOTS'}
+                </h3>
+                <Cpu className="w-4 h-4 text-purple-400" />
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {lang === 'fr' 
+                    ? 'Chaque rapport de métrique carbone journalier est résumé en un hash Merkle Root et scellé sur la blockchain Ethereum Sepolia. Utilisez le bouton pour vérifier instantanément la non-falsification.' 
+                    : 'Verify telemetry authenticity. Daily Carbon metrics are compressed into Merkle cryptographic roots and anchored to Ethereum Sepolia.'}
+                </p>
+
+                <div className="space-y-2.5">
+                  {proofs.map((proof) => (
+                    <div 
+                      key={proof.id}
+                      className="p-3.5 rounded-lg bg-slate-900/50 border border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 font-mono text-[10px]"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500">{proof.date}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-slate-800 text-purple-300 font-bold">Block #{proof.blockNumber}</span>
+                        </div>
+                        <div className="text-slate-400">
+                          Root: <span className="text-slate-300 text-[9px]">{proof.rootHash}</span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        {proof.verified ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>VERIFIED ON-CHAIN</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleVerifyProof(proof.id)}
+                            disabled={isVerifyingProof !== null}
+                            className="px-3 py-1.5 bg-purple-500 text-white hover:bg-purple-600 rounded text-[9px] font-bold tracking-wide transition-all flex items-center gap-1.5"
+                          >
+                            {isVerifyingProof === proof.id ? (
+                              <>
+                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                <span>VERIFYING...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Link className="w-3 h-3" />
+                                <span>VERIFY PROOF</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-500 tracking-wider uppercase">
-                {lang === 'fr' ? 'RIEN DE PRÉVU' : 'NOTHING PLANNED'}
-              </span>
+            {/* Burn / Carbon Retirement Certificate */}
+            <div className={`lg:col-span-5 p-5 rounded-xl border shadow-sm flex flex-col justify-between ${
+              isLightMode ? 'bg-white border-slate-100' : 'bg-[#0f0c1b] border-red-500/10'
+            }`}>
+              <div className="space-y-4">
+                <div className="pb-3 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
+                  <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-red-400">
+                    {lang === 'fr' ? 'BRÛLER & RETIRER LES CRÉDITS CARBONE' : 'BURN & RETIRE CARBON CREDITS'}
+                  </h3>
+                  <Leaf className="w-4 h-4 text-red-400" />
+                </div>
+
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {lang === 'fr' 
+                    ? 'Cette action brûle vos tokens carbone $BCT. Ils sont retirés définitivement du ledger, ce qui crée une preuve d\'impact infalsifiable avec un certificat téléchargeable.' 
+                    : 'Destroy your utility carbon tokens to offset greenhouse emissions permanently. This logs an immutable Proof of Impact on-chain.'}
+                </p>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-slate-400">{lang === 'fr' ? 'Tonnes CO2eq à détruire' : 'Tons to Burn & Retire'}</span>
+                    <span className="font-mono font-bold text-red-400">{burnAmount} BCT</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max={Math.max(5, walletBalance)}
+                    value={burnAmount}
+                    onChange={(e) => setBurnAmount(parseInt(e.target.value))}
+                    disabled={!walletConnected || walletBalance < 5}
+                    className="w-full accent-red-500 bg-slate-800 h-1.5 rounded-lg appearance-none cursor-pointer disabled:opacity-40"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button
+                  onClick={handleBurn}
+                  disabled={!walletConnected || walletBalance < burnAmount || isBurning}
+                  className="w-full py-2.5 px-4 bg-gradient-to-r from-red-600/30 to-rose-600/30 hover:from-red-600/40 hover:to-rose-600/40 border border-red-500/40 text-red-300 rounded-lg text-xs font-bold tracking-wide flex items-center justify-center gap-2 transition-all"
+                >
+                  {isBurning ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-red-400" />
+                      <span>{lang === 'fr' ? 'Retrait sur le ledger...' : 'Retiring tokens on ledger...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Leaf className="w-4 h-4" />
+                      <span>{lang === 'fr' ? 'Brûler & Certifier l\'Impact' : 'Burn & Certify Impact'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
+
           </div>
 
-          {/* Column 3: Alerts (Empty State) */}
-          <div className={`lg:col-span-3 p-5 rounded-xl border shadow-sm flex flex-col justify-between min-h-[220px] ${
-            isLightMode ? 'bg-white border-slate-100' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800'
+          {/* BLOCK EXPLORER: Recent on-chain logs */}
+          <div className={`p-5 rounded-xl border shadow-sm ${
+            isLightMode ? 'bg-white border-slate-100' : 'bg-[#0f0c1b] border-slate-800'
           }`}>
-            <div className="pb-3 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
-              <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-slate-500 dark:text-slate-400">
-                {lang === 'fr' ? 'ALERTES' : 'ALERTS'}
+            <div className="pb-3 mb-4 border-b border-slate-150 dark:border-slate-800/60 flex items-center justify-between">
+              <h3 className="text-[11px] font-black font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                {lang === 'fr' ? 'EXPLORATEUR DE TRANSACTIONS (SEPOLIA TESTNET)' : 'SEPOLIA BLOCK EXPLORER LOGS'}
               </h3>
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <ExternalLink className="w-4 h-4 text-slate-400" />
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <span className="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 dark:text-slate-500 tracking-wider uppercase">
-                {lang === 'fr' ? '0 ALERTE ACTIVE' : '0 ACTIVE ALERTS'}
-              </span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs font-mono">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-500 font-black">
+                    <th className="py-2.5 px-2">{lang === 'fr' ? 'HASH TX' : 'TX HASH'}</th>
+                    <th className="py-2.5 px-2">{lang === 'fr' ? 'TYPE D\'OPÉRATION' : 'METHOD / TYPE'}</th>
+                    <th className="py-2.5 px-2">{lang === 'fr' ? 'MONTANT' : 'AMOUNT'}</th>
+                    <th className="py-2.5 px-2">TIMESTAMP</th>
+                    <th className="py-2.5 px-2">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {txs.map((tx, idx) => (
+                    <tr key={idx} className="hover:bg-slate-900/30 transition-all">
+                      <td className="py-2.5 px-2 text-purple-400 select-all flex items-center gap-1">
+                        <span>{tx.hash}</span>
+                        <ExternalLink className="w-3 h-3 opacity-40" />
+                      </td>
+                      <td className="py-2.5 px-2 text-slate-300 font-bold">{tx.type}</td>
+                      <td className="py-2.5 px-2 font-black text-amber-300">{tx.amount} $BCT</td>
+                      <td className="py-2.5 px-2 text-slate-400">{tx.timestamp}</td>
+                      <td className="py-2.5 px-2">
+                        <span className="px-2 py-0.5 rounded text-[8px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {tx.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 

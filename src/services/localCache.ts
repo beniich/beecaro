@@ -62,17 +62,11 @@ export const localCache = {
   },
 
   isSimulatedOffline(): boolean {
-    try {
-      return localStorage.getItem(LS_SIMULATED_OFFLINE_KEY) === 'true';
-    } catch (e) {
-      return false;
-    }
+    return false;
   },
 
   setSimulatedOffline(enabled: boolean) {
-    try {
-      localStorage.setItem(LS_SIMULATED_OFFLINE_KEY, enabled ? 'true' : 'false');
-    } catch (e) {}
+    // Deprecated for production
     notifyListeners();
   },
 

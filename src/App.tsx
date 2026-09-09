@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { LoginModal } from './components/LoginModal';
-import { TrialModal } from './components/TrialModal';
 import { PromoTopBanner } from './components/PromoTopBanner';
 import { AdCartDrawer } from './components/AdCartDrawer';
+import { PlanGate } from './components/PlanGate';
 
 import { HomePage } from './features/home/HomePage';
 import { FeaturesPage } from './features/features/FeaturesPage';
@@ -38,27 +38,26 @@ import { SpacesManager } from './features/spaces/SpacesManager';
 import { WorkOrdersManager } from './features/cmms/WorkOrdersManager';
 import { PredictiveMaintenance } from './features/predictive/PredictiveMaintenance';
 import { CarbonMarket } from './features/carbonmarket/CarbonMarket';
-import { MissionControlDashboard } from './components/cyber/MissionControlDashboard';
-import { GodModeSystemView } from './components/cyber/GodModeSystemView';
-import { SecurityThreatMatrix } from './components/cyber/SecurityThreatMatrix';
-import { SustainabilityMatrix } from './components/cyber/SustainabilityMatrix';
-import { NeuralEngineArchitect } from './components/cyber/NeuralEngineArchitect';
-import { GlobalEnergyNexus } from './components/cyber/GlobalEnergyNexus';
-import { GlobalFleetCommand } from './components/cyber/GlobalFleetCommand';
-import { DatabaseCacheMonitor } from './components/cyber/DatabaseCacheMonitor';
-import { PredictiveCoreAnalysis } from './components/cyber/PredictiveCoreAnalysis';
-import { ApiGatewayTrafficHub } from './components/cyber/ApiGatewayTrafficHub';
-import { MultiCloudInfrastructure } from './components/cyber/MultiCloudInfrastructure';
-import { ImmutableAuditVault } from './components/cyber/ImmutableAuditVault';
-
-// Modals and QR Scanner
+// Heavy Cyber Cockpits & 3D Twin Lazy-loaded to optimize memory during bundle compilation
+const MissionControlDashboard = React.lazy(() => import('./components/cyber/MissionControlDashboard').then(m => ({ default: m.MissionControlDashboard })));
+const GodModeSystemView = React.lazy(() => import('./components/cyber/GodModeSystemView').then(m => ({ default: m.GodModeSystemView })));
+const SecurityThreatMatrix = React.lazy(() => import('./components/cyber/SecurityThreatMatrix').then(m => ({ default: m.SecurityThreatMatrix })));
+const SustainabilityMatrix = React.lazy(() => import('./components/cyber/SustainabilityMatrix').then(m => ({ default: m.SustainabilityMatrix })));
+const NeuralEngineArchitect = React.lazy(() => import('./components/cyber/NeuralEngineArchitect').then(m => ({ default: m.NeuralEngineArchitect })));
+const GlobalEnergyNexus = React.lazy(() => import('./components/cyber/GlobalEnergyNexus').then(m => ({ default: m.GlobalEnergyNexus })));
+const GlobalFleetCommand = React.lazy(() => import('./components/cyber/GlobalFleetCommand').then(m => ({ default: m.GlobalFleetCommand })));
+const DatabaseCacheMonitor = React.lazy(() => import('./components/cyber/DatabaseCacheMonitor').then(m => ({ default: m.DatabaseCacheMonitor })));
+const PredictiveCoreAnalysis = React.lazy(() => import('./components/cyber/PredictiveCoreAnalysis').then(m => ({ default: m.PredictiveCoreAnalysis })));
+const ApiGatewayTrafficHub = React.lazy(() => import('./components/cyber/ApiGatewayTrafficHub').then(m => ({ default: m.ApiGatewayTrafficHub })));
+const MultiCloudInfrastructure = React.lazy(() => import('./components/cyber/MultiCloudInfrastructure').then(m => ({ default: m.MultiCloudInfrastructure })));
+const ImmutableAuditVault = React.lazy(() => import('./components/cyber/ImmutableAuditVault').then(m => ({ default: m.ImmutableAuditVault })));
+const DigitalTwinViewer = React.lazy(() => import('./features/digitaltwin/DigitalTwinViewer').then(m => ({ default: m.DigitalTwinViewer })));
+const GrafanaCockpit = React.lazy(() => import('./features/grafana/GrafanaCockpit').then(m => ({ default: m.GrafanaCockpit })));
+const RubricsInspector = React.lazy(() => import('./features/diagnostics/RubricsInspector').then(m => ({ default: m.RubricsInspector })));
 import { AssetDetailModal } from './components/AssetDetailModal';
 import { WorkOrderModal } from './components/WorkOrderModal';
 import { QrScannerModal } from './features/qr/QrScannerModal';
 import { ComplaintQrGenerator } from './features/qr/ComplaintQrGenerator';
-import { GrafanaCockpit } from './features/grafana/GrafanaCockpit';
-import { RubricsInspector } from './features/diagnostics/RubricsInspector';
-import { DigitalTwinViewer } from './features/digitaltwin/DigitalTwinViewer';
 import { IntervenantsPanel } from "./features/dashboard/IntervenantsPanel";
 import { api } from './services/api';
 
@@ -82,6 +81,8 @@ import {
   SystemConfigPanel,
   PwaManifestPanel
 } from './features/dashboard/NewOperationalPanels';
+import { ApiKeyManager } from './components/security/ApiKeyManager';
+import { TrialModal } from './components/TrialModal';
 
 import { useAuth } from './contexts/AuthContext';
 import { Asset, WorkOrder } from './types';
@@ -97,6 +98,7 @@ export function App() {
   const [biometrics, setBiometrics] = useState<BiometricState>(initialBiometrics);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [trialModalOpen, setTrialModalOpen] = useState(false);
+  
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
 
   // Superadmin Cockpit Theme States
@@ -126,13 +128,13 @@ export function App() {
     NativeDevice.initializeApp(() => {
       // If any modal is open, close it on Android back press instead of exiting
       if (loginModalOpen) { setLoginModalOpen(false); return true; }
-      if (trialModalOpen) { setTrialModalOpen(false); return true; }
+      
       if (cartDrawerOpen) { setCartDrawerOpen(false); return true; }
       if (assetModalOpen) { setAssetModalOpen(false); return true; }
       if (workOrderModalOpen) { setWorkOrderModalOpen(false); return true; }
       return false; // Let history go back
     });
-  }, [loginModalOpen, trialModalOpen, cartDrawerOpen, assetModalOpen, workOrderModalOpen]);
+  }, [loginModalOpen, cartDrawerOpen, assetModalOpen, workOrderModalOpen]);
 
   useEffect(() => {
     if (firebaseUser) {
@@ -146,6 +148,8 @@ export function App() {
         email: firebaseUser.email || '',
         name: firebaseProfile?.displayName || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Enterprise Operator',
         role,
+        subscriptionStatus: firebaseProfile?.subscriptionStatus,
+        plan: firebaseProfile?.plan,
         photoURL: firebaseUser.photoURL || undefined,
         loginTime: new Date().toISOString()
       };
@@ -193,6 +197,8 @@ export function App() {
       email,
       name: email.split('@')[0],
       role,
+        subscriptionStatus: firebaseProfile?.subscriptionStatus,
+        plan: firebaseProfile?.plan,
       loginTime: new Date().toISOString()
     };
     setCurrentUser(user);
@@ -242,6 +248,9 @@ export function App() {
   ]);
 
   const handleNavigate = (page: NavigationPage | string) => {
+    if (page === 'pricing') {
+      setTrialModalOpen(true);
+    }
     setCurrentPage(page as NavigationPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -295,7 +304,7 @@ export function App() {
     'lighting', 'water', 'waste', 'assets', 'scanner', 'qr-generator', 'spaces', 'work-orders', 'maintenance', 'market', 'air-quality', 'impact',
     'team-ops', 'intervenants', 'env-impact', 'esg-copilot', 'bim-3d', 'digital-twin', 'predictive-ai', 'occupants-care',
     'bee-roots', 'success-stories', 'careers', 'partner-portal', 'cmms-beecarbonat', 'erp-integration', 'google-sheets',
-    'analytics-dashboard', 'genai-assistant', 'security-access', 'system-config', 'pwa-manifest'
+    'analytics-dashboard', 'genai-assistant', 'security-access', 'api-keys', 'system-config', 'pwa-manifest'
   ];
   const beeCarbonatPages = [
     'threat-matrix', 'sustainability-matrix', 'neural-engine', 'energy-nexus', 'fleet-command', 'database-monitor',
@@ -304,12 +313,24 @@ export function App() {
   const isDashboardPage = dashboardPages.includes(currentPage);
   const isBeeCarbonatPage = beeCarbonatPages.includes(currentPage);
 
+  useEffect(() => {
+    // If not logged in and trying to access a dashboard page, redirect to pricing
+    if (!firebaseUser && (isDashboardPage || isBeeCarbonatPage) && currentPage !== 'pricing') {
+      setCurrentPage('pricing');
+    }
+  }, [firebaseUser, isDashboardPage, isBeeCarbonatPage, currentPage]);
+
   const renderContent = () => (
-    <>
+    <React.Suspense fallback={
+      <div className="flex items-center justify-center p-16 text-center text-amber-500 font-mono text-sm">
+        <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mr-3" />
+        Chargement du module...
+      </div>
+    }>
       {currentPage === 'home' && (
         <HomePage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           biometrics={biometrics}
           lang={lang}
         />
@@ -318,7 +339,7 @@ export function App() {
       {currentPage === 'features' && (
         <FeaturesPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -326,7 +347,7 @@ export function App() {
       {currentPage === 'solutions-vitalai' && (
         <SolutionsVitalAIPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           biometrics={biometrics}
           onUpdateBiometrics={handleUpdateBiometrics}
           lang={lang}
@@ -336,7 +357,7 @@ export function App() {
       {currentPage === 'solutions-inboxai' && (
         <SolutionsInboxAIPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -344,7 +365,7 @@ export function App() {
       {currentPage === 'solutions-meetai' && (
         <SolutionsMeetAIPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -352,7 +373,7 @@ export function App() {
       {currentPage === 'solutions-more' && (
         <SolutionsMorePage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -369,7 +390,7 @@ export function App() {
       {currentPage === 'integrations' && (
         <IntegrationsPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -377,7 +398,7 @@ export function App() {
       {currentPage === 'pricing' && (
         <PricingPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -385,7 +406,7 @@ export function App() {
       {currentPage === 'customers' && (
         <CustomersPage
           onNavigate={handleNavigate}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           lang={lang}
         />
       )}
@@ -790,6 +811,12 @@ export function App() {
         </div>
       )}
 
+      {currentPage === 'api-keys' && (
+        <div className="py-4">
+          <ApiKeyManager lang={lang} isLightMode={dashboardIsLight} onNavigateTab={handleNavigate} />
+        </div>
+      )}
+
       {currentPage === 'system-config' && (
         <div className="py-4">
           <SystemConfigPanel lang={lang} isLightMode={dashboardIsLight} onNavigate={handleNavigate} />
@@ -801,7 +828,7 @@ export function App() {
           <PwaManifestPanel lang={lang} isLightMode={dashboardIsLight} onNavigate={handleNavigate} />
         </div>
       )}
-    </>
+    </React.Suspense>
   );
 
   return (
@@ -810,7 +837,7 @@ export function App() {
         <HomePage
           onNavigate={handleNavigate}
           onOpenLogin={() => setLoginModalOpen(true)}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           onOpenCart={() => setCartDrawerOpen(true)}
           cartCount={adCartItems.length}
           biometrics={biometrics}
@@ -822,7 +849,7 @@ export function App() {
       ) : isBeeCarbonatPage ? (
         <TelemetryProvider>
           <div className="w-full min-h-screen bg-white dark:bg-slate-950">
-            {renderContent()}
+            <PlanGate feature={currentPage} onNavigate={handleNavigate} lang={lang}>{renderContent()}</PlanGate>
           </div>
         </TelemetryProvider>
       ) : isDashboardPage ? (
@@ -837,7 +864,7 @@ export function App() {
           currentUser={currentUser}
           onUpdateUserRole={handleUpdateUserRole}
         >
-          {renderContent()}
+          <PlanGate feature={currentPage} onNavigate={handleNavigate} lang={lang}>{renderContent()}</PlanGate>
         </DashboardLayout>
       ) : (
         <PublicLayout
@@ -848,12 +875,12 @@ export function App() {
           currentUser={currentUser}
           onLogout={handleLogout}
           onOpenLogin={() => setLoginModalOpen(true)}
-          onOpenTrial={() => setTrialModalOpen(true)}
+          onOpenTrial={() => handleNavigate("pricing")}
           biometrics={biometrics}
           cartCount={adCartItems.length}
           onOpenCart={() => setCartDrawerOpen(true)}
         >
-          {renderContent()}
+          <PlanGate feature={currentPage} onNavigate={handleNavigate} lang={lang}>{renderContent()}</PlanGate>
         </PublicLayout>
       )}
 
@@ -876,16 +903,20 @@ export function App() {
         onSuccess={handleLoginSuccess}
         onOpenTrial={() => {
           setLoginModalOpen(false);
-          setTrialModalOpen(true);
+          handleNavigate("pricing");
         }}
         lang={lang}
       />
 
       {/* Trial / Onboarding Modal */}
-      <TrialModal
+      <TrialModal 
         isOpen={trialModalOpen}
         onClose={() => setTrialModalOpen(false)}
-        onSuccess={() => setTrialModalOpen(false)}
+        onSuccess={() => {
+          setTrialModalOpen(false);
+          setCurrentPage('workspace');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
         lang={lang}
       />
 
@@ -906,6 +937,7 @@ export function App() {
         isOpen={workOrderModalOpen}
         onClose={() => setWorkOrderModalOpen(false)}
         preselectedAsset={preselectedAssetForWO}
+        lang={lang}
         onSubmit={(newOrder) => {
           api.createWorkOrder(newOrder as any);
           setWorkOrderModalOpen(false);

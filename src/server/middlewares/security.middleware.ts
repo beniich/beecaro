@@ -1,46 +1,40 @@
-import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
 
-// ============== SANITIZATION XSS ==============
-export const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
-  const sanitize = (obj: any): any => {
-    if (typeof obj === 'string') {
-      return obj
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+="[^"]*"/gi, '')
-        .trim();
-    }
-    if (Array.isArray(obj)) return obj.map(sanitize);
-    if (obj && typeof obj === 'object') {
-      const cleaned: Record<string, any> = {};
-      for (const [key, value] of Object.entries(obj)) {
-        cleaned[key] = sanitize(value);
-      }
-      return cleaned;
-    }
-    return obj;
-  };
+// Rate Limiting
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-  if (req.body) req.body = sanitize(req.body);
-  if (req.query && typeof req.query === 'object') {
-    for (const key of Object.keys(req.query)) {
-      (req.query as any)[key] = sanitize(req.query[key]);
-    }
-  }
-  if (req.params && typeof req.params === 'object') {
-    for (const key of Object.keys(req.params)) {
-      (req.params as any)[key] = sanitize(req.params[key]);
-    }
-  }
+export const strictLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // limit each IP to 50 requests per windowMs
+  message: 'Too many requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-  next();
-};
+// CORS Configuration
+export const corsConfig = cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || '*'] // Replace with actual production URL if available, but keep * as fallback in PaaS
+    : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+});
 
-// ============== HEADERS DE SÉCURITÉ ==============
-export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-};
+// Helmet Configuration
+export const helmetConfig = helmet({
+  contentSecurityPolicy: false, // Often disabled or customized for React apps with external resources (maps, APIs)
+  crossOriginEmbedderPolicy: false,
+});
+
+// Compression
+export const compressionConfig = compression();

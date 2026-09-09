@@ -22,7 +22,7 @@ const updateSW = registerSW({
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="system" storageKey="bizos-theme">
+      <ThemeProvider defaultTheme="dark" storageKey="bizos-theme-v2">
         <AppConfigProvider>
           <AuthProvider>
             <App />

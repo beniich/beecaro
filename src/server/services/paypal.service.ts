@@ -4,7 +4,7 @@ import { users as usersTable, processedEvents as processedEventsTable } from '..
 import { eq } from 'drizzle-orm';
 import { updateUser, memoryUsers } from './auth.service';
 
-const PAYPAL_ENV = process.env.PAYPAL_ENVIRONMENT || (process.env.NODE_ENV === 'production' ? 'production' : 'sandbox');
+const PAYPAL_ENV = process.env.PAYPAL_ENVIRONMENT || 'production';
 const PAYPAL_API_BASE = PAYPAL_ENV === 'production'
   ? 'https://api-m.paypal.com'
   : 'https://api-m.sandbox.paypal.com';
@@ -15,11 +15,11 @@ const processedEventsMemory = new Set<string>();
  * Obtain OAuth2 Access Token from PayPal
  */
 export async function getPayPalAccessToken(): Promise<string> {
-  const clientId = process.env.PAYPAL_CLIENT_ID || '';
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET || '';
+  const clientId = process.env.PAYPAL_CLIENT_ID || 'BAAsJknhnfLAthl8kQyzKiuKJ32No44Rz59kg3eBFfTALQG6TUNKlIL5vu0YWO65ao_UtoHfFYk7bISi3k';
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET || 'EPinGXUkU_rlwsa-yq6gLRff_mXfRaG7lFhN1mxEGst98mTgUlhngHz-ZLrtjT7q0MOJXxkd5Omiqp5e';
 
   if (!clientId || !clientSecret) {
-    return 'mock_access_token_beecarbonit';
+    throw new Error('PayPal credentials (PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET) are missing.');
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -37,7 +37,7 @@ export async function getPayPalAccessToken(): Promise<string> {
     return response.data.access_token;
   } catch (error: any) {
     console.error('[PayPalService] Get Token Error:', error.response?.data || error.message);
-    return 'mock_access_token_beecarbonit';
+    throw new Error(`Failed to authenticate with PayPal: ${error.message}`);
   }
 }
 
@@ -63,21 +63,6 @@ export async function createSubscription(planId: string, userId: string, returnU
     }
   };
 
-  if (token === 'mock_access_token_beecarbonit') {
-    // Return simulated subscription response for local development / testing
-    return {
-      id: `I-SUB-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      status: 'APPROVAL_PENDING',
-      links: [
-        {
-          href: `https://www.sandbox.paypal.com/checkoutnow?token=EC-SIMULATED-SUB-${userId}`,
-          rel: 'approve',
-          method: 'GET'
-        }
-      ]
-    };
-  }
-
   try {
     const response = await axios.post(
       `${PAYPAL_API_BASE}/v1/billing/subscriptions`,
@@ -101,16 +86,6 @@ export async function createSubscription(planId: string, userId: string, returnU
  */
 export async function verifySubscription(subscriptionId: string) {
   const token = await getPayPalAccessToken();
-
-  if (token === 'mock_access_token_beecarbonit') {
-    return {
-      id: subscriptionId,
-      status: 'ACTIVE',
-      plan_id: 'P-PRO-BEECARBONIT',
-      create_time: new Date().toISOString(),
-      simulated: true
-    };
-  }
 
   try {
     const response = await axios.get(
@@ -334,20 +309,6 @@ export async function createPayPalOrder(amount: number, currency: string = 'EUR'
     },
   };
 
-  if (token === 'mock_access_token_beecarbonit') {
-    return {
-      id: `ORDER-SIMULATED-${Date.now()}`,
-      status: 'CREATED',
-      links: [
-        {
-          href: `https://www.sandbox.paypal.com/checkoutnow?token=ORDER-SIMULATED-${Date.now()}`,
-          rel: 'approve',
-          method: 'GET',
-        },
-      ],
-    };
-  }
-
   try {
     const response = await axios.post(`${PAYPAL_API_BASE}/v2/checkout/orders`, payload, {
       headers: {
@@ -367,23 +328,6 @@ export async function createPayPalOrder(amount: number, currency: string = 'EUR'
  */
 export async function capturePayPalOrder(orderId: string, userId?: string, planType: string = 'PRO') {
   const token = await getPayPalAccessToken();
-
-  if (token === 'mock_access_token_beecarbonit' || orderId.startsWith('ORDER-SIMULATED-')) {
-    if (userId) {
-      await updateUser(userId, {
-        subscriptionStatus: 'active',
-        role: 'PRO',
-        plan: planType,
-        paypalSubscriptionId: orderId,
-      });
-    }
-    return {
-      id: orderId,
-      status: 'COMPLETED',
-      simulated: true,
-      payer: { email_address: 'sandbox-payer@bizos.ai' },
-    };
-  }
 
   try {
     const response = await axios.post(

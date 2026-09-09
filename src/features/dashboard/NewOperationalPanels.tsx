@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import confetti from 'canvas-confetti';
 import { SystemConfigMaster } from '../settings/SystemConfigMaster';
+import { ApiKeyManager } from '../../components/security/ApiKeyManager';
 import { api } from '../../services/api';
 
 interface PanelProps {
@@ -2254,7 +2255,8 @@ export const GenAiAssistantPanel: React.FC<PanelProps> = ({ lang, isLightMode })
 // ==========================================
 // 15. SECURITY & ACCESS
 // ==========================================
-export const SecurityAccessPanel: React.FC<PanelProps> = ({ lang, isLightMode }) => {
+export const SecurityAccessPanel: React.FC<PanelProps> = ({ lang, isLightMode, onNavigate }) => {
+  const [activeSecTab, setActiveSecTab] = useState<'doors' | 'api_keys'>('doors');
   const [lockedRooms, setLockedRooms] = useState({
     serverRoom: true,
     lobbyDoors: false,
@@ -2270,69 +2272,110 @@ export const SecurityAccessPanel: React.FC<PanelProps> = ({ lang, isLightMode })
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className={`p-6 rounded-3xl border shadow-xl ${isLightMode ? 'bg-white border-slate-200' : 'bg-[#120e23] border-[#ff9d2b]/15'}`}>
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-400">
-            <Shield className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className={`text-xl font-bold ${isLightMode ? 'text-slate-800' : 'text-black dark:text-white'}`}>
-              Security & Access Control
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {lang === 'fr' ? 'Contrôle en direct des verrous IoT, journal d\'accès badge et chiffrement BACnet' : 'IoT access logs, smart locking controllers, and BACnet/IP payload encryption status'}
-            </p>
-          </div>
-        </div>
+    <div className="space-y-6 max-w-6xl">
+      {/* Sub-Navigation Tabs */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-fit">
+        <button
+          onClick={() => setActiveSecTab('doors')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+            activeSecTab === 'doors'
+              ? 'bg-white dark:bg-zinc-800 text-orange-500 shadow-sm'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Shield className="w-4 h-4" />
+          <span>{lang === 'fr' ? 'Verrous IoT & Badges RFID' : 'IoT Locks & RFID Badges'}</span>
+        </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Locks Control */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold font-mono text-slate-600 dark:text-slate-600 dark:text-slate-300">IoT Locking Controls</h3>
-            <div className="space-y-3 text-xs font-mono">
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950/60 border border-white/5 flex items-center justify-between">
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400">Server Room (Fl.32):</span>
-                  <span className={`block font-bold text-[10px] mt-0.5 ${lockedRooms.serverRoom ? 'text-red-400' : 'text-emerald-400'}`}>{lockedRooms.serverRoom ? 'LOCKED' : 'UNLOCKED'}</span>
-                </div>
-                <button onClick={() => toggleLock('serverRoom')} className="py-1 px-2.5 rounded bg-slate-800 text-slate-200">Toggle</button>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950/60 border border-white/5 flex items-center justify-between">
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400">Lobby Doors (L1):</span>
-                  <span className={`block font-bold text-[10px] mt-0.5 ${lockedRooms.lobbyDoors ? 'text-red-400' : 'text-emerald-400'}`}>{lockedRooms.lobbyDoors ? 'LOCKED' : 'UNLOCKED'}</span>
-                </div>
-                <button onClick={() => toggleLock('lobbyDoors')} className="py-1 px-2.5 rounded bg-slate-800 text-slate-200">Toggle</button>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950/60 border border-white/5 flex items-center justify-between">
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400">Boardroom (Fl.32):</span>
-                  <span className={`block font-bold text-[10px] mt-0.5 ${lockedRooms.execBoard ? 'text-red-400' : 'text-emerald-400'}`}>{lockedRooms.execBoard ? 'LOCKED' : 'UNLOCKED'}</span>
-                </div>
-                <button onClick={() => toggleLock('execBoard')} className="py-1 px-2.5 rounded bg-slate-800 text-slate-200">Toggle</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Swipe log */}
-          <div className="lg:col-span-2 space-y-4">
-            <h3 className="text-sm font-bold font-mono text-slate-600 dark:text-slate-600 dark:text-slate-300">Recent Swipe logs</h3>
-            <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-              <div className="p-3 rounded-xl bg-white dark:bg-slate-950/50 border border-white/5 flex justify-between">
-                <span>Tarik Benaich (Superadmin)</span>
-                <span className="text-slate-500 dark:text-slate-500">10:14 AM • Lobby Entrance</span>
-              </div>
-              <div className="p-3 rounded-xl bg-white dark:bg-slate-950/50 border border-white/5 flex justify-between">
-                <span>Marc Becker (Technician)</span>
-                <span className="text-slate-500 dark:text-slate-500">10:02 AM • Basement Plant Room</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveSecTab('api_keys')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+            activeSecTab === 'api_keys'
+              ? 'bg-white dark:bg-zinc-800 text-amber-500 shadow-sm'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Key className="w-4 h-4" />
+          <span>{lang === 'fr' ? 'Clés API REST & Scopes RBAC' : 'API Key Manager (RBAC Scopes)'}</span>
+        </button>
       </div>
+
+      {activeSecTab === 'api_keys' ? (
+        <ApiKeyManager lang={lang} isLightMode={isLightMode} onNavigateTab={onNavigate} />
+      ) : (
+        <div className={`p-6 rounded-3xl border shadow-xl ${isLightMode ? 'bg-white border-slate-200' : 'bg-[#120e23] border-[#ff9d2b]/15'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-400">
+                <Shield className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className={`text-xl font-bold ${isLightMode ? 'text-slate-800' : 'text-black dark:text-white'}`}>
+                  Security & Access Control
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {lang === 'fr' ? 'Contrôle en direct des verrous IoT, journal d\'accès badge et chiffrement BACnet' : 'IoT access logs, smart locking controllers, and BACnet/IP payload encryption status'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveSecTab('api_keys')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white border border-amber-500/25 transition-all w-fit"
+            >
+              <Key className="w-3.5 h-3.5" />
+              <span>{lang === 'fr' ? 'Gérer les Clés API (Scopes)' : 'Manage API Keys & Scopes'}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Locks Control */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold font-mono text-slate-600 dark:text-slate-300">IoT Locking Controls</h3>
+              <div className="space-y-3 text-xs font-mono">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950/60 border border-white/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-500 dark:text-slate-400">Server Room (Fl.32):</span>
+                    <span className={`block font-bold text-[10px] mt-0.5 ${lockedRooms.serverRoom ? 'text-red-400' : 'text-emerald-400'}`}>{lockedRooms.serverRoom ? 'LOCKED' : 'UNLOCKED'}</span>
+                  </div>
+                  <button onClick={() => toggleLock('serverRoom')} className="py-1 px-2.5 rounded bg-slate-800 text-slate-200">Toggle</button>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950/60 border border-white/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-500 dark:text-slate-400">Lobby Doors (L1):</span>
+                    <span className={`block font-bold text-[10px] mt-0.5 ${lockedRooms.lobbyDoors ? 'text-red-400' : 'text-emerald-400'}`}>{lockedRooms.lobbyDoors ? 'LOCKED' : 'UNLOCKED'}</span>
+                  </div>
+                  <button onClick={() => toggleLock('lobbyDoors')} className="py-1 px-2.5 rounded bg-slate-800 text-slate-200">Toggle</button>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-950/60 border border-white/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-500 dark:text-slate-400">Boardroom (Fl.32):</span>
+                    <span className={`block font-bold text-[10px] mt-0.5 ${lockedRooms.execBoard ? 'text-red-400' : 'text-emerald-400'}`}>{lockedRooms.execBoard ? 'LOCKED' : 'UNLOCKED'}</span>
+                  </div>
+                  <button onClick={() => toggleLock('execBoard')} className="py-1 px-2.5 rounded bg-slate-800 text-slate-200">Toggle</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Swipe log */}
+            <div className="lg:col-span-2 space-y-4">
+              <h3 className="text-sm font-bold font-mono text-slate-600 dark:text-slate-300">Recent Swipe logs</h3>
+              <div className="space-y-2 font-mono text-[11px] text-slate-500 dark:text-slate-400">
+                <div className="p-3 rounded-xl bg-white dark:bg-slate-950/50 border border-white/5 flex justify-between">
+                  <span>Tarik Benaich (Superadmin)</span>
+                  <span className="text-slate-500 dark:text-slate-500">10:14 AM • Lobby Entrance</span>
+                </div>
+                <div className="p-3 rounded-xl bg-white dark:bg-slate-950/50 border border-white/5 flex justify-between">
+                  <span>Marc Becker (Technician)</span>
+                  <span className="text-slate-500 dark:text-slate-500">10:02 AM • Basement Plant Room</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

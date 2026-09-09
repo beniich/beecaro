@@ -48,8 +48,8 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({
 
         <p className="text-base sm:text-lg text-[#cdc3d0] max-w-3xl mx-auto leading-relaxed">
           {lang === 'fr'
-            ? "BizOS élimine les flux de travail fragmentés. Notre architecture VitalAI lie données, actions et décisions dans un environnement fluide et respirant."
-            : "BizOS eliminates fragmented workflows. Our VitalAI architecture binds data, action, and insight into one seamless, breathable environment designed for cognitive clarity."}
+            ? "BeeCarbonat élimine les flux de travail fragmentés. Notre architecture VitalAI lie données, actions et décisions dans un environnement fluide et respirant."
+            : "BeeCarbonat eliminates fragmented workflows. Our VitalAI architecture binds data, action, and insight into one seamless, breathable environment designed for cognitive clarity."}
         </p>
       </div>
 
@@ -238,8 +238,8 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({
           </h2>
           <p className="text-sm text-[#cdc3d0]">
             {lang === 'fr'
-              ? 'Comparez l\'ancien modèle fragmenté avec l\'intelligence autonome de BizOS.'
-              : 'Compare the fragmented status quo with the sovereign clarity of BizOS.'}
+              ? 'Comparez l\'ancien modèle fragmenté avec l\'intelligence autonome de BeeCarbonat.'
+              : 'Compare the fragmented status quo with the sovereign clarity of BeeCarbonat.'}
           </p>
         </div>
 
@@ -269,11 +269,11 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({
             </div>
           </div>
 
-          {/* With BizOS */}
+          {/* With BeeCarbonat */}
           <div className="p-6 sm:p-8 rounded-3xl bg-[#1d182d] border border-[#ecd7ff]/30 shadow-2xl shadow-[#ecd7ff]/5">
             <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#34d399] uppercase tracking-wider mb-4">
               <span className="material-symbols-outlined text-[18px]">check_circle</span>
-              <span>{lang === 'fr' ? 'AVEC BIZOS (VITALAI)' : 'WITH BIZOS (VITALAI)'}</span>
+              <span>{lang === 'fr' ? 'AVEC BEECARBONAT (VITALAI)' : 'WITH BEECARBONAT (VITALAI)'}</span>
             </div>
 
             <div className="space-y-4 text-xs text-[#cdc3d0]">

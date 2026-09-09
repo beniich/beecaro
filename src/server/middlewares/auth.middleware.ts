@@ -18,18 +18,6 @@ export async function authenticate(req: AuthenticatedRequest, res: Response, nex
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    // If no token, allow request to proceed as anonymous/guest or fall back to default if in dev
-    const defaultUser = memoryUsers.get('user-admin-default');
-    if (defaultUser) {
-      req.user = {
-        userId: defaultUser.id,
-        email: defaultUser.email,
-        role: defaultUser.role,
-        subscriptionStatus: defaultUser.subscriptionStatus,
-        plan: defaultUser.plan
-      };
-      return next();
-    }
     return res.status(401).json({ error: 'Token d\'authentification requis' });
   }
 

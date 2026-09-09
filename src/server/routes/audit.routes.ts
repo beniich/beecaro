@@ -63,3 +63,5 @@ auditRouter.get('/audit-logs', async (req, res) => {
     logs: filtered.slice(0, limit),
   });
 });
+
+export default auditRouter;

@@ -83,7 +83,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, onOpenTria
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>BizOS • Intelligence Énergétique & CAFM ESG</span>
+            <span>BeeCarbonat • Intelligence Énergétique & CAFM ESG</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
@@ -177,7 +177,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, onOpenTria
             <div className="w-10 h-10 mx-auto rounded-full bg-emerald-500/30 text-emerald-300 flex items-center justify-center">
               <Check className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-emerald-200">Abonnement BizOS Activé !</h3>
+            <h3 className="text-lg font-bold text-emerald-200">Abonnement BeeCarbonat Activé !</h3>
             <p className="text-xs text-emerald-300">
               Réf Transaction : <span className="font-mono">{subscriptionSuccessId}</span>. Vos accès complets sont ouverts.
             </p>
@@ -262,7 +262,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, onOpenTria
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-extrabold text-white flex items-center gap-2">
-                  <span>BizOS Pro</span>
+                  <span>BeeCarbonat Pro</span>
                   <Sparkles className="w-4 h-4 text-amber-400" />
                 </h3>
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">
@@ -405,7 +405,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, onOpenTria
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 text-xs text-amber-400 font-bold uppercase tracking-wider">
               <ShieldCheck className="w-4 h-4" />
-              <span>Passerelle de Paiement Sécurisée BizOS</span>
+              <span>Passerelle de Paiement Sécurisée BeeCarbonat</span>
             </div>
             <h3 className="text-xl font-extrabold text-white">
               Finaliser votre souscription : Plan {selectedPlan}
@@ -435,7 +435,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onNavigate, onOpenTria
           ) : (
             <div className="space-y-4 text-center">
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 leading-relaxed">
-                Connectez-vous ou créez votre compte BizOS pour lier votre abonnement et recevoir votre facture certifiée.
+                Connectez-vous ou créez votre compte BeeCarbonat pour lier votre abonnement et recevoir votre facture certifiée.
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

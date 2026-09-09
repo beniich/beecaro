@@ -116,7 +116,7 @@ diagnosticsRouter.get('/rubrics/diagnostics', async (req, res) => {
       status: 'OPERATIONAL',
       dbMode: 'OAuth 2.0 + JWT + Firestore Rules',
       dbConnected: true,
-      recordsCount: leasesStore.length + memoryUsers.length,
+      recordsCount: leasesStore.length + memoryUsers.size,
       features: ['Google Sheets Live Sync', 'Connecteurs ERP SAP/CRM', 'RBAC Multi-Rôles', 'PWA & Offline Cache Dexie'],
       latencyMs: 6,
     },
@@ -142,3 +142,6 @@ diagnosticsRouter.get('/rubrics/diagnostics', async (req, res) => {
     rubrics,
   });
 });
+
+export default diagnosticsRouter;
+

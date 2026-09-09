@@ -15,7 +15,7 @@ export const auditMiddleware = (entity: string) => {
         if (logged) return;
         logged = true;
 
-        let entityId: string | null = req.params.id || null;
+        let entityId: string | null = (req.params.id as string) || null;
 
         if (!entityId && data) {
           try {

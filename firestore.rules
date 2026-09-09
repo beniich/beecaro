@@ -51,6 +51,14 @@ service cloud.firestore {
              (!('details' in data) || (data.details is string && data.details.size() <= 2048));
     }
 
+    function isValidApiKey(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+             data.name is string && data.name.size() <= 128 &&
+             data.keyPrefix is string && data.keyPrefix.size() <= 64 &&
+             data.status in ['active', 'revoked'] &&
+             data.scopes is list && data.scopes.size() > 0 && data.scopes.size() <= 5;
+    }
+
     // Users Collection
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
@@ -66,6 +74,15 @@ service cloud.firestore {
       allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && isValidId(logId) && isValidAuditLog(incoming()) && incoming().userId == request.auth.uid;
       allow update, delete: if false; // Immutable audit log
+    }
+
+    // API Keys Collection (Read, Write, Admin scopes)
+    match /api_keys/{keyId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(keyId) && isValidApiKey(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(keyId) && (resource.data.userId == request.auth.uid || isAdmin()) && incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
   }
 }

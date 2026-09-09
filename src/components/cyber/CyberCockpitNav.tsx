@@ -47,10 +47,9 @@ export const CyberCockpitNav: React.FC<CyberCockpitNavProps> = ({
 }) => {
   const { user, profile, signOut } = useAuth();
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [simulatedRole, setSimulatedRole] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const activeRole = simulatedRole || profile?.role || 'admin';
+  const activeRole = profile?.role || 'admin';
   const displayName = adminName || profile?.displayName || (user?.email ? user.email.split('@')[0] : 'J. Doe');
   const userEmail = profile?.email || user?.email || 'beniich.contact@gmail.com';
 
@@ -171,42 +170,6 @@ export const CyberCockpitNav: React.FC<CyberCockpitNavProps> = ({
                   <span className="text-[10px] font-mono font-bold text-slate-300 uppercase">
                     RBAC Role: <span className="text-[#ff9a00]">{activeRole}</span>
                   </span>
-                </div>
-              </div>
-
-              {/* RBAC Role Switcher for Production Testing */}
-              <div className="mt-2.5">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold mb-1.5 px-1">
-                  Simulate / Verify Role:
-                </div>
-                <div className="space-y-1">
-                  {[
-                    { id: 'admin', label: 'SuperAdmin / DevOps Lead', desc: 'Full Read/Write & Circuit Breaker', badge: 'FULL' },
-                    { id: 'facility_manager', label: 'Facility Manager', desc: 'Read Telemetry & Dispatch Tickets', badge: 'OPS' },
-                    { id: 'technician', label: 'Field Technician', desc: 'Sensor Health & Diagnostics', badge: 'TECH' },
-                    { id: 'viewer', label: 'Auditor / Viewer', desc: 'Read-Only Telemetry Access', badge: 'READ' },
-                  ].map((role) => (
-                    <button
-                      key={role.id}
-                      onClick={() => {
-                        setSimulatedRole(role.id);
-                        setProfileDropdownOpen(false);
-                      }}
-                      className={`w-full text-left p-2 rounded-xl font-mono text-[11px] flex items-center justify-between transition-all ${
-                        activeRole === role.id
-                          ? 'bg-[#ff9a00]/15 border border-[#ff9a00]/50 text-white'
-                          : 'hover:bg-slate-900/60 text-slate-400 border border-transparent'
-                      }`}
-                    >
-                      <div>
-                        <div className="font-bold text-slate-200">{role.label}</div>
-                        <div className="text-[9px] text-slate-500">{role.desc}</div>
-                      </div>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-lg bg-black text-[#ff9a00] font-bold border border-slate-800">
-                        {role.badge}
-                      </span>
-                    </button>
-                  ))}
                 </div>
               </div>
 

@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navSections = [
     {
-      title: lang === 'fr' ? '🏢 1. OPÉRATIONS & FLUIDES' : '🏢 1. SMART UTILITIES & BMS',
+      title: lang === 'fr' ? '1. OPÉRATIONS & FLUIDES' : '1. SMART UTILITIES & BMS',
       items: [
         { id: 'overview' as NavigationTab, label: lang === 'fr' ? 'Vue d\'ensemble & Pilotage' : 'Overview & Cockpit', icon: LayoutDashboard, badge: 'Live' },
         { id: 'lighting' as NavigationTab, label: lang === 'fr' ? 'Énergie & Éclairage' : 'Energy & Lighting', icon: Lightbulb },
@@ -58,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      title: lang === 'fr' ? '⚙️ 2. GMAO & GESTION TECHNIQUE' : '⚙️ 2. ASSET LIFECYCLE & CMMS',
+      title: lang === 'fr' ? '2. GMAO & GESTION TECHNIQUE' : '2. ASSET LIFECYCLE & CMMS',
       items: [
         { id: 'assets' as NavigationTab, label: lang === 'fr' ? 'Équipements & Parc EAM' : 'Asset Topology & EAM', icon: Cpu },
         { id: 'cmms' as NavigationTab, label: lang === 'fr' ? 'Ordres de Travail (GMAO)' : 'CMMS & Work Orders', icon: Wrench, badge: '4 Act' },
@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      title: lang === 'fr' ? '🌍 3. STRATÉGIE CLIMAT & ESG' : '🌍 3. CLIMATE STRATEGY & ESG',
+      title: lang === 'fr' ? '3. STRATÉGIE CLIMAT & ESG' : '3. CLIMATE STRATEGY & ESG',
       items: [
         { id: 'esg-sustainability' as NavigationTab, label: lang === 'fr' ? 'Bilan Carbone Scopes 1-3' : 'ESG & Carbon CSRD', icon: Leaf, badge: '-19.6%' },
         { id: 'carbon-market' as NavigationTab, label: lang === 'fr' ? 'Marché des Crédits' : 'Carbon Market', icon: Globe },
@@ -77,13 +77,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     },
     {
-      title: lang === 'fr' ? '📐 4. JUMEAU NUMÉRIQUE & BIM' : '📐 4. DIGITAL TWIN & SPATIAL',
+      title: lang === 'fr' ? '4. JUMEAU NUMÉRIQUE & BIM' : '4. DIGITAL TWIN & SPATIAL',
       items: [
         { id: 'digital-twin' as NavigationTab, label: lang === 'fr' ? 'Jumeau 3D & Visionneuse BIM' : '3D Twin & BIM IFC', icon: Layers, badge: '3D' },
       ]
     },
     {
-      title: lang === 'fr' ? '🔌 5. CONNECTIVITÉ & GOUVERNANCE' : '🔌 5. CONNECTIVITY & GOVERNANCE',
+      title: lang === 'fr' ? '5. CONNECTIVITÉ & GOUVERNANCE' : '5. CONNECTIVITY & GOVERNANCE',
       items: [
         { id: 'leases' as NavigationTab, label: lang === 'fr' ? 'Baux & Gestion Locataires' : 'Tenants & Leases', icon: FileText },
         { id: 'pricing' as NavigationTab, label: lang === 'fr' ? 'Offres SaaS & ROI' : 'Pricing & ROI', icon: CreditCard },
@@ -142,19 +142,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Quick Launch NFC / QR Button */}
-        <div className="p-3 pb-1.5 flex-shrink-0 space-y-1.5">
+        <div className="p-2.5 pb-1 flex-shrink-0 space-y-1">
           <button
             id="btn-quick-qr-scan"
             onClick={() => {
               openQrScanner();
               if (onCloseMobile) onCloseMobile();
             }}
-            className={`w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-500 hover:bg-orange-500/20 hover:border-orange-500/50 transition-all text-xs font-semibold tracking-wide uppercase ${
+            className={`w-full flex items-center justify-center space-x-2 py-1.5 px-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors text-xs font-semibold tracking-wide uppercase ${
               collapsed && !isMobileOpen ? 'px-0' : ''
             }`}
             title={lang === 'fr' ? 'Scanner Tag NFC / QR Équipement' : 'Scan Physical Asset NFC / QR Tag'}
           >
-            <Radio className="w-4 h-4 text-orange-500 flex-shrink-0 animate-pulse" />
+            <Radio className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 flex-shrink-0 animate-pulse" />
             {(!collapsed || isMobileOpen) && (
               <span>{lang === 'fr' ? 'Scan NFC / QR' : 'NFC & QR Scan'}</span>
             )}
@@ -163,38 +163,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             id="btn-beecarbonat-ext"
             onClick={() => handleItemClick('traffic-hub')}
-            className={`w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-lg bg-[#1a0f30] border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:border-amber-500 transition-all text-xs font-mono font-bold tracking-wider uppercase ${
+            className={`w-full flex items-center justify-center space-x-2 py-1.5 px-2.5 rounded-lg bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors text-xs font-mono font-medium tracking-wider uppercase ${
               collapsed && !isMobileOpen ? 'px-0' : ''
             }`}
             title="BeeCarbonat Suite"
           >
-            <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <Zap className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 flex-shrink-0" />
             {(!collapsed || isMobileOpen) && (
               <span className="flex items-center gap-1.5">
                 BeeCarbonat 
-                <span className="text-[9px] bg-amber-500/20 text-amber-500 px-1 py-0.5 rounded leading-none">BETA</span>
+                <span className="text-[9px] bg-blue-500/20 text-blue-500 dark:text-blue-400 px-1 py-0.5 rounded leading-none">BETA</span>
               </span>
             )}
           </button>
 
-          {/* NANOBANANA TELEMETRY INTERFACE */}
-          <div className={`p-2 rounded-lg border border-amber-500/25 bg-amber-500/5 flex items-center gap-2.5 transition-all ${
+          {/* TELEMETRY INTERFACE */}
+          <div className={`p-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900/50 flex items-center gap-2 transition-all ${
             collapsed && !isMobileOpen ? 'justify-center' : ''
           }`}>
             <div className="relative flex items-center justify-center">
-              <span className="material-symbols-outlined text-base text-amber-400 animate-spin" style={{ animationDuration: '6s' }}>blur_circular</span>
-              <span className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <Activity className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
             </div>
             {(!collapsed || isMobileOpen) && (
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5 leading-none">
-                  <span className="text-[9px] font-mono font-black text-amber-400 tracking-wider uppercase">
-                    NANOBANANA
+                  <span className="text-[9px] font-mono font-bold text-slate-800 dark:text-zinc-300 tracking-wider uppercase">
+                    CORE LINK
                   </span>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
-                <span className="text-[8px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                  CORE LINK: 100% ONLINE
+                <span className="text-[8px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
+                  100% ONLINE
                 </span>
               </div>
             )}
@@ -202,11 +202,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation List with sections */}
-        <nav className="flex-1 px-3 py-2 space-y-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-800">
+        <nav className="flex-1 px-2.5 py-1.5 space-y-2.5 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
           {navSections.map((sec, idx) => (
-            <div key={idx} className="space-y-1">
+            <div key={idx} className="space-y-0.5">
               <div
-                className={`px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-500 ${
+                className={`px-2 pb-0.5 text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-zinc-500 ${
                   collapsed && !isMobileOpen ? 'text-center' : ''
                 }`}
               >
@@ -221,27 +221,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     key={item.id}
                     id={`nav-item-${item.id}`}
                     onClick={() => handleItemClick(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                       isActive
-                        ? 'bg-emerald-500/15 text-black dark:text-white border border-emerald-500/40 shadow-sm shadow-emerald-950/40'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-100 hover:bg-slate-50 dark:bg-slate-900/60 border border-transparent'
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30'
+                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-900 border border-transparent'
                     }`}
                     title={item.label}
                   >
-                    <div className="flex items-center space-x-2.5 truncate">
+                    <div className="flex items-center space-x-2 truncate">
                       <Icon
-                        className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                          isActive ? 'text-emerald-400' : 'text-slate-500 dark:text-slate-400'
+                        className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
+                          isActive ? 'text-blue-500 dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
                         }`}
                       />
-                      {(!collapsed || isMobileOpen) && <span className="truncate">{item.label}</span>}
+                      {(!collapsed || isMobileOpen) && <span className="truncate text-xs">{item.label}</span>}
                     </div>
                     {(!collapsed || isMobileOpen) && item.badge && (
                       <span
                         className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase ${
                           isActive
-                            ? 'bg-emerald-400/20 text-emerald-300'
-                            : 'bg-slate-800 text-slate-500 dark:text-slate-400'
+                            ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                            : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400'
                         }`}
                       >
                         {item.badge}
@@ -256,28 +256,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Theme Toggle */}
         {(!collapsed || isMobileOpen) && (
-          <div className="p-3 border-t border-slate-200 dark:border-slate-800/80 flex justify-center bg-slate-50 dark:bg-slate-900">
+          <div className="p-2 border-t border-slate-200 dark:border-zinc-800 flex justify-center bg-slate-50 dark:bg-zinc-950">
             <ThemeToggle />
           </div>
         )}
         {/* Collapse Toggle & User Info */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between flex-shrink-0 bg-white dark:bg-slate-950">
+        <div className="p-2.5 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-between flex-shrink-0 bg-white dark:bg-zinc-950">
           {(!collapsed || isMobileOpen) ? (
-            <div className="flex items-center space-x-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xs">
+            <div className="flex items-center space-x-2 overflow-hidden">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 dark:text-blue-400 font-bold text-xs">
                 SF
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-slate-200 truncate">
+                <span className="text-xs font-semibold text-slate-900 dark:text-zinc-100 truncate">
                   {lang === 'fr' ? 'SpaceFlow Admin' : 'SpaceFlow Admin'}
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                <span className="text-[9px] text-slate-400 dark:text-zinc-500 truncate">
                   {lang === 'fr' ? 'GMAO & Smart Building' : 'CAFM & Digital Twin'}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="mx-auto w-8 h-8 rounded-full bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xs">
+            <div className="mx-auto w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500 dark:text-blue-400 font-bold text-xs">
               SF
             </div>
           )}
@@ -286,7 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             id="btn-sidebar-toggle"
             onClick={onToggleCollapse}
-            className="hidden lg:flex p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-auto"
+            className="hidden lg:flex p-1 rounded-lg text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors ml-auto"
             title={collapsed ? 'Déplier la barre latérale' : 'Replier la barre latérale'}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

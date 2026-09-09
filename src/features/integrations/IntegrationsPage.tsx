@@ -68,8 +68,8 @@ export const IntegrationsPage: React.FC<IntegrationsPageProps> = ({
 
         <p className="text-base sm:text-lg text-[#cdc3d0] max-w-3xl mx-auto leading-relaxed mb-8">
           {lang === 'fr'
-            ? "BizOS se synchronise en temps réel avec vos outils de communication, CRM, finance et productivité pour unifier les décisions de votre entreprise."
-            : "BizOS synchronizes in real time with your communication tools, CRM, finance, and engineering trackers to synthesize company clarity."}
+            ? "BeeCarbonat se synchronise en temps réel avec vos outils de communication, CRM, finance et productivité pour unifier les décisions de votre entreprise."
+            : "BeeCarbonat synchronizes in real time with your communication tools, CRM, finance, and engineering trackers to synthesize company clarity."}
         </p>
 
         {/* Search & Request Integration Bar */}

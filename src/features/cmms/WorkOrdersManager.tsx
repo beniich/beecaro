@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   ClipboardList, Search, Filter, Wrench, Clock, CheckCircle2, 
   AlertCircle, ChevronRight, LayoutGrid, List, FileText, Settings, Download,
-  Database, Wifi, WifiOff, RefreshCw, Edit3, Plus
+  Database, Wifi, WifiOff, RefreshCw, Edit3, Plus, Trash2
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import { localCache } from '../../services/localCache';
 import { WorkOrder } from '../../types';
@@ -28,6 +29,10 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
   const [isSyncing, setIsSyncing] = useState(false);
   const [isOffline, setIsOffline] = useState(!localCache.isOnline());
   const [cachedCount, setCachedCount] = useState(0);
+
+  // Search & Filter State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'completed'>('active');
 
   // Edit / Procedure Modal State
   const [editingWorkOrder, setEditingWorkOrder] = useState<WorkOrder | null>(null);
@@ -132,28 +137,50 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
     loadWorkOrders();
   };
 
+  const handleDeleteWorkOrder = async (ticket: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const targetId = ticket.rawId || ticket.id;
+    try {
+      await api.deleteWorkOrder(targetId);
+      // Immediately remove from the visual list triggering the framer motion exit animation
+      setTickets(prev => prev.filter(item => item.id !== ticket.id && item.rawId !== targetId));
+      setCachedCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to delete work order:', err);
+    }
+  };
+
+  const handleMarkAsCompleted = async (ticket: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const targetId = ticket.rawId || ticket.id;
+    try {
+      await api.updateWorkOrderStatus(targetId, 'resolved');
+      setTickets(prev => prev.map(item => 
+        (item.id === ticket.id || item.rawId === targetId) 
+          ? { ...item, status: 'Resolved', completedAt: new Date().toISOString() } 
+          : item
+      ));
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+  };
+
   const generatePDFReport = (ticket: any, e: React.MouseEvent) => {
     e.stopPropagation();
     const doc = new jsPDF();
     
     // Header
     doc.setFontSize(22);
-    doc.setTextColor(30, 64, 175); // Blue-800
     doc.text('INTERVENTION REPORT', 14, 20);
     
     doc.setFontSize(10);
-    doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
     
     // Status Badge Simulation
-    doc.setDrawColor(22, 163, 74); // Emerald
-    doc.setFillColor(220, 252, 231); // Light Emerald
     doc.rect(160, 14, 35, 10, 'FD');
-    doc.setTextColor(21, 128, 61);
     doc.text('VALIDATED', 165, 21);
 
     // Ticket Details
-    doc.setTextColor(0);
     doc.setFontSize(14);
     doc.text(`Work Order: ${ticket.id}`, 14, 45);
     
@@ -171,10 +198,8 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
         ['Completion Date', ticket.completedAt || 'Pending'],
       ],
       theme: 'grid',
-      headStyles: { fillColor: [30, 64, 175] }
     });
 
-    // Signatures
     const finalY = (doc as any).lastAutoTable.finalY || 100;
     doc.setFontSize(12);
     doc.text('Technician Signature:', 14, finalY + 30);
@@ -186,8 +211,27 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
     doc.save(`Report_${ticket.id}.pdf`);
   };
 
+  // Perform client-side searching & filtering
+  const filteredTickets = tickets.filter(t => {
+    const matchesSearch = 
+      t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.desc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.asset.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.assignee.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const isDone = t.status === 'Completed' || t.status === 'Resolved' || t.status === 'Closed';
+
+    if (statusFilter === 'active') {
+      return matchesSearch && !isDone;
+    }
+    if (statusFilter === 'completed') {
+      return matchesSearch && isDone;
+    }
+    return matchesSearch;
+  });
+
   return (
-    <div id="cmms-manager-view" className="space-y-4 animate-in fade-in duration-300">
+    <div id="cmms-manager-view" className="work-orders-manager space-y-4 animate-in fade-in duration-300">
       
       {/* Enterprise Header */}
       <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
@@ -223,7 +267,7 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
           <button
             onClick={handleRefresh}
             disabled={isSyncing}
-            className="p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-600 dark:text-slate-300 hover:text-black dark:text-white transition-colors"
+            className="p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-300 hover:text-white transition-colors"
             title="Rafraîchir / Synchroniser le cache"
           >
             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-amber-400' : ''}`} />
@@ -247,6 +291,59 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
           >
             + CREATE WO
           </button>
+        </div>
+      </div>
+
+      {/* Advanced Search and Filter Ribbon */}
+      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+          <input
+            type="text"
+            placeholder={lang === 'fr' ? "Rechercher un ticket..." : "Search tickets..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-8 pr-4 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500 rounded font-mono"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2 font-mono text-[11px] w-full sm:w-auto justify-end">
+          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+            <Filter className="w-3.5 h-3.5" />
+            {lang === 'fr' ? "Filtrer :" : "Filter :"}
+          </span>
+          <div className="flex bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded p-0.5">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-2.5 py-1 rounded text-xs transition-all ${
+                statusFilter === 'all'
+                  ? 'bg-amber-600 text-black dark:text-white font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              {lang === 'fr' ? "Tous" : "All"}
+            </button>
+            <button
+              onClick={() => setStatusFilter('active')}
+              className={`px-2.5 py-1 rounded text-xs transition-all ${
+                statusFilter === 'active'
+                  ? 'bg-amber-600 text-black dark:text-white font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              {lang === 'fr' ? "En cours" : "Active"}
+            </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={`px-2.5 py-1 rounded text-xs transition-all ${
+                statusFilter === 'completed'
+                  ? 'bg-amber-600 text-black dark:text-white font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              {lang === 'fr' ? "Validés" : "Completed"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -275,8 +372,8 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
           <div className="lg:col-span-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-full flex flex-col">
             <div className="p-2 border-b border-slate-200 dark:border-slate-700 bg-slate-800 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-200 uppercase">Work Task Execution Registry</span>
-              <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-                {tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}
+              <span className="text-[10px] font-mono text-slate-400">
+                {filteredTickets.length} {filteredTickets.length === 1 ? 'ticket' : 'tickets'}
               </span>
             </div>
             
@@ -294,126 +391,165 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
                     <th className="px-3 py-2 font-bold uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-600 dark:text-slate-600 dark:text-slate-300">
-                  {tickets.map((t, i) => (
-                    <tr 
-                      key={i} 
-                      className="hover:bg-amber-900/20 cursor-pointer transition-colors group"
-                      onClick={() => handleOpenEdit(t)}
-                    >
-                      <td className="px-3 py-2 text-amber-400 font-bold flex items-center gap-1.5">
-                        <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 text-amber-400 transition-opacity" />
-                        {t.id}
-                      </td>
-                      <td className="px-3 py-2 text-black dark:text-white font-sans font-medium">{t.desc}</td>
-                      <td className="px-3 py-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase border ${
-                          t.priority === 'Critical' ? 'bg-red-900/30 text-red-400 border-red-500/30' :
-                          t.priority === 'High' ? 'bg-amber-900/30 text-amber-400 border-amber-500/30' :
-                          'bg-emerald-900/30 text-emerald-400 border-emerald-500/30'
-                        }`}>
-                          {t.priority}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase border ${
-                          t.status === 'Completed' || t.status === 'Resolved' || t.status === 'Closed'
-                            ? 'bg-emerald-900/30 text-emerald-300 border-emerald-600'
-                            : t.status === 'In Progress'
-                              ? 'bg-blue-900/30 text-blue-300 border-blue-600'
-                              : 'bg-slate-800 text-slate-600 dark:text-slate-600 dark:text-slate-300 border-slate-600'
-                        }`}>
-                          {t.status}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 font-bold text-blue-300">{t.asset}</td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-600 dark:text-slate-300">{t.assignee}</td>
-                      <td className="px-3 py-2 text-slate-500 dark:text-slate-400">{t.due}</td>
-                      <td className="px-3 py-2 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={(e) => handleOpenEdit(t, e)}
-                            className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-400 text-black px-2 py-1 rounded text-[10px] font-bold transition-all shadow-sm shadow-amber-500/20"
-                            title="Modifier ce ticket et sa procédure d'intervention"
-                          >
-                            <Edit3 className="w-3 h-3" /> Modifier
-                          </button>
-                          {t.status !== 'Completed' && t.status !== 'Closed' && t.status !== 'Resolved' && (
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                  <AnimatePresence initial={false}>
+                    {filteredTickets.map((t) => (
+                      <motion.tr 
+                        key={t.id} 
+                        initial={{ opacity: 1, x: 0 }}
+                        exit={{ 
+                          opacity: 0, 
+                          x: -30,
+                          transition: { duration: 0.25, ease: 'easeOut' }
+                        }}
+                        layout
+                        className="hover:bg-amber-500/10 dark:hover:bg-amber-900/20 cursor-pointer transition-colors group"
+                        onClick={() => handleOpenEdit(t)}
+                      >
+                        <td className="px-3 py-2 text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1.5">
+                          <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 text-amber-600 dark:text-amber-400 transition-opacity" />
+                          {t.id}
+                        </td>
+                        <td className="px-3 py-2 text-slate-800 dark:text-slate-200 font-sans font-medium whitespace-normal max-w-xs">{t.desc}</td>
+                        <td className="px-3 py-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase border ${
+                            t.priority === 'Critical' ? 'bg-red-500/10 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-500/30' :
+                            t.priority === 'High' ? 'bg-amber-500/10 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-500/30' :
+                            'bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                          }`}>
+                            {t.priority}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase border ${
+                            t.status === 'Completed' || t.status === 'Resolved' || t.status === 'Closed'
+                              ? 'bg-emerald-500/10 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-500/40'
+                              : t.status === 'In Progress'
+                                ? 'bg-blue-500/10 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-500/40'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                          }`}>
+                            {t.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 font-medium text-slate-800 dark:text-slate-200">{t.asset}</td>
+                        <td className="px-3 py-2 text-slate-700 dark:text-slate-300">{t.assignee}</td>
+                        <td className="px-3 py-2 text-slate-500 dark:text-slate-400 font-mono text-[11px]">{t.due}</td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
                             <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const targetId = t.rawId || t.id;
-                                await api.updateWorkOrderStatus(targetId, 'resolved');
-                                setTickets(prev => prev.map(item => (item.id === t.id || item.rawId === targetId) ? { ...item, status: 'Resolved', completedAt: new Date().toISOString() } : item));
-                              }}
-                              className="inline-flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-emerald-400 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 transition-colors"
-                              title="Valider l'intervention"
+                              onClick={(e) => handleOpenEdit(t, e)}
+                              className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-400 text-black px-2 py-1 rounded text-[10px] font-bold transition-all shadow-sm"
+                              title={lang === 'fr' ? "Modifier" : "Edit"}
                             >
-                              <CheckCircle2 className="w-3 h-3" /> Valider
+                              <Edit3 className="w-3 h-3" />
                             </button>
-                          )}
-                          <button 
-                            onClick={(e) => generatePDFReport(t, e)}
-                            className="inline-flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-600 dark:text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 transition-colors"
-                            title="Télécharger le Rapport PDF"
-                          >
-                            <Download className="w-3 h-3 text-emerald-400" /> PDF
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {t.status !== 'Completed' && t.status !== 'Closed' && t.status !== 'Resolved' && (
+                              <button
+                                onClick={(e) => handleMarkAsCompleted(t, e)}
+                                className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 transition-colors"
+                                title={lang === 'fr' ? "Valider l'intervention" : "Approve Work"}
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button 
+                              onClick={(e) => generatePDFReport(t, e)}
+                              className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded border border-slate-300 dark:border-slate-700 transition-colors"
+                              title="Report PDF"
+                            >
+                              <Download className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteWorkOrder(t, e)}
+                              className="inline-flex items-center gap-1 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white px-2 py-1 rounded border border-red-500/20 transition-all"
+                              title={lang === 'fr' ? "Supprimer l'intervention" : "Delete"}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       ) : (
-        /* VISUAL CARDS FALLBACK */
+        /* VISUAL CARDS FALLBACK WITH SLIDE-OUT TRANSITION */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {tickets.map((t, i) => (
-            <div 
-              key={i} 
-              className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-xl flex flex-col justify-between cursor-pointer hover:border-amber-500/50 relative group transition-all"
-              onClick={() => handleOpenEdit(t)}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">{t.id}</span>
-                    <span className={`px-1.5 py-0.2 rounded text-[8px] uppercase border font-mono ${
-                      t.priority === 'Critical' ? 'bg-red-900/30 text-red-400 border-red-500/30' :
-                      t.priority === 'High' ? 'bg-amber-900/30 text-amber-400 border-amber-500/30' :
-                      'bg-emerald-900/30 text-emerald-400 border-emerald-500/30'
-                    }`}>
-                      {t.priority}
-                    </span>
+          <AnimatePresence initial={false}>
+            {filteredTickets.map((t) => (
+              <motion.div 
+                key={t.id} 
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ 
+                  opacity: 0, 
+                  scale: 0.95, 
+                  x: 40,
+                  transition: { duration: 0.25, ease: 'easeOut' }
+                }}
+                layout
+                className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-xl flex flex-col justify-between cursor-pointer hover:border-amber-500/50 relative group transition-all"
+                onClick={() => handleOpenEdit(t)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">{t.id}</span>
+                      <span className={`px-1.5 py-0.2 rounded text-[8px] uppercase border font-mono ${
+                        t.priority === 'Critical' ? 'bg-red-900/30 text-red-400 border-red-500/30' :
+                        t.priority === 'High' ? 'bg-amber-900/30 text-amber-400 border-amber-500/30' :
+                        'bg-emerald-900/30 text-emerald-400 border-emerald-500/30'
+                      }`}>
+                        {t.priority}
+                      </span>
+                    </div>
+                    <h3 className="text-sm text-black dark:text-white font-bold group-hover:text-amber-300 transition-colors">{t.desc}</h3>
                   </div>
-                  <h3 className="text-sm text-black dark:text-white font-bold mt-1 group-hover:text-amber-300 transition-colors">{t.desc}</h3>
+
+                  <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+                    {t.status !== 'Completed' && t.status !== 'Closed' && t.status !== 'Resolved' && (
+                      <button
+                        onClick={(e) => handleMarkAsCompleted(t, e)}
+                        className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded transition-colors"
+                        title={lang === 'fr' ? "Valider l'intervention" : "Complete Work"}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => handleOpenEdit(t, e)}
+                      className="p-1.5 bg-amber-500 text-black font-bold rounded hover:bg-amber-400 transition-colors"
+                      title={lang === 'fr' ? "Modifier" : "Edit"}
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => generatePDFReport(t, e)}
+                      className="p-1.5 bg-slate-800 text-slate-300 rounded hover:bg-slate-700 border border-slate-700 transition-colors"
+                      title="PDF"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteWorkOrder(t, e)}
+                      className="p-1.5 bg-red-950/40 text-red-400 border border-red-900/50 hover:bg-red-600 hover:text-white rounded transition-colors"
+                      title={lang === 'fr' ? "Supprimer" : "Delete"}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={(e) => handleOpenEdit(t, e)}
-                    className="p-1.5 bg-amber-500 text-black font-bold rounded-lg hover:bg-amber-400 transition-colors flex items-center gap-1 text-[10px] font-mono"
-                    title="Modifier ce ticket"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                  <button
-                    onClick={(e) => generatePDFReport(t, e)}
-                    className="p-1.5 bg-slate-800 text-slate-600 dark:text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-1 text-[10px] font-mono"
-                    title="Télécharger le Rapport PDF"
-                  >
-                    <Download className="w-3.5 h-3.5 text-emerald-400" /> PDF
-                  </button>
+                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
+                  <span className="text-blue-400">{t.asset}</span>
+                  <span>{t.assignee}</span>
                 </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
-                <span className="text-blue-400">{t.asset}</span>
-                <span>{t.assignee}</span>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
@@ -428,4 +564,3 @@ export const WorkOrdersManager: React.FC<WorkOrdersManagerProps> = ({
     </div>
   );
 };
-

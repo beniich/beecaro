@@ -88,7 +88,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       setAuthSuccessMsg(null);
       const cred = await signInWithGoogle();
       setIsGoogleLoading(false);
-      onSuccess(cred.user.email || 'operator@bizos.ai');
+      onSuccess(cred.user.email || 'operator@beecarbonat.ai');
       onClose();
     } catch (err: any) {
       setIsGoogleLoading(false);
@@ -159,7 +159,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       const verified = await verifyAccountWithCode(codeToVerify);
       if (verified) {
         setVerificationSuccess(true);
-        setAuthSuccessMsg(lang === 'fr' ? 'Félicitations ! Votre compte BizOS est vérifié.' : 'Account verified successfully!');
+        setAuthSuccessMsg(lang === 'fr' ? 'Félicitations ! Votre compte BeeCarbonat est vérifié.' : 'Account verified successfully!');
         setTimeout(() => {
           onSuccess(user?.email || email);
           onClose();
@@ -195,7 +195,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      onSuccess(`${roleKey}@bizos.ai`);
+      onSuccess(`${roleKey}@beecarbonat.ai`);
       onClose();
     }, 400);
   };
@@ -218,8 +218,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <BeeLogo size="lg" />
           </div>
           <h3 className="text-2xl font-bold text-white tracking-tight">
-            {mode === 'signin' && (lang === 'fr' ? 'Connexion à BizOS' : 'Sign in to BizOS')}
-            {mode === 'signup' && (lang === 'fr' ? 'Créer un Compte BizOS' : 'Create BizOS Account')}
+            {mode === 'signin' && (lang === 'fr' ? 'Connexion à BeeCarbonat' : 'Sign in to BeeCarbonat')}
+            {mode === 'signup' && (lang === 'fr' ? 'Créer un Compte BeeCarbonat' : 'Create BeeCarbonat Account')}
             {mode === 'verify' && (lang === 'fr' ? 'Vérification du Compte' : 'Account Verification')}
             {mode === 'forgot' && (lang === 'fr' ? 'Mot de passe oublié' : 'Reset Password')}
           </h3>
@@ -540,7 +540,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     className="mt-0.5 rounded bg-[#1b152d] border-white/20 text-amber-500 focus:ring-0"
                   />
                   <label htmlFor="terms" className="text-[11px] text-slate-400 leading-tight">
-                    J'accepte les conditions générales d'utilisation et la politique de confidentialité de BizOS.
+                    J'accepte les conditions générales d'utilisation et la politique de confidentialité de BeeCarbonat.
                   </label>
                 </div>
               )}
@@ -555,7 +555,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 ) : (
                   <>
                     <span>
-                      {mode === 'signin' && 'Se Connecter à BizOS'}
+                      {mode === 'signin' && 'Se Connecter à BeeCarbonat'}
                       {mode === 'signup' && 'Créer mon Compte & Vérifier'}
                       {mode === 'forgot' && 'Envoyer le Lien de Réinitialisation'}
                     </span>

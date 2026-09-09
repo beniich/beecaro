@@ -63,7 +63,7 @@ const createFieldOperatorHandler = async (req: Request, res: Response) => {
 };
 
 const updateFieldOperatorHandler = async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   const data = req.body;
   try {
     if (process.env.MY_NEON_DB_URL) {
@@ -113,7 +113,7 @@ const updateFieldOperatorHandler = async (req: Request, res: Response) => {
 };
 
 const deleteFieldOperatorHandler = async (req: Request, res: Response) => {
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
   try {
     try {
       await db.delete(fieldOperatorsTable).where(eq(fieldOperatorsTable.id, id));
@@ -131,3 +131,6 @@ operatorsRouter.get('/', getFieldOperatorsHandler);
 operatorsRouter.post('/', createFieldOperatorHandler);
 operatorsRouter.put('/:id', updateFieldOperatorHandler);
 operatorsRouter.delete('/:id', deleteFieldOperatorHandler);
+
+export default operatorsRouter;
+

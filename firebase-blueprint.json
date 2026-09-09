@@ -29,6 +29,31 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "action", "timestamp"]
+    },
+    "ApiKey": {
+      "title": "ApiKey",
+      "description": "Secure API key with permission scopes (Read, Write, Admin) and revocation status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userEmail": { "type": "string", "maxLength": 256 },
+        "name": { "type": "string", "maxLength": 128 },
+        "keyPrefix": { "type": "string", "maxLength": 64 },
+        "keyMasked": { "type": "string", "maxLength": 128 },
+        "scopes": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["read", "write", "admin"] }
+        },
+        "status": { "type": "string", "enum": ["active", "revoked"] },
+        "environment": { "type": "string", "enum": ["production", "staging", "development"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string" },
+        "revokedAt": { "type": "string" },
+        "lastUsedAt": { "type": "string" },
+        "usageCount": { "type": "number" }
+      },
+      "required": ["id", "userId", "name", "keyPrefix", "scopes", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -39,6 +64,10 @@
     "/audit_logs/{logId}": {
       "schema": "AuditLog",
       "description": "Audit trail entries for facility actions"
+    },
+    "/api_keys/{keyId}": {
+      "schema": "ApiKey",
+      "description": "Stores generated API keys with scopes and revocation state"
     }
   }
 }

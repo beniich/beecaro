@@ -50,7 +50,7 @@ export const InteractiveWorkspace: React.FC<InteractiveWorkspaceProps> = ({
             <span>{lang === 'fr' ? 'COCKPIT DE DÉMONSTRATION EN DIRECT' : 'LIVE INTERACTIVE WORKSPACE'}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#e8defb] tracking-tight mt-1">
-            BizOS Founder Cockpit Simulator
+            BeeCarbonat Founder Cockpit Simulator
           </h1>
         </div>
 
@@ -104,7 +104,7 @@ export const InteractiveWorkspace: React.FC<InteractiveWorkspaceProps> = ({
             </div>
 
             <p className="text-xs text-[#cdc3d0]">
-              Test how BizOS protects founder calendar blocks when physiological fatigue or high cognitive strain is detected.
+              Test how BeeCarbonat protects founder calendar blocks when physiological fatigue or high cognitive strain is detected.
             </p>
 
             <div className="space-y-4">

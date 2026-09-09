@@ -59,6 +59,7 @@ export type NavigationPage =
   | 'analytics-dashboard'
   | 'genai-assistant'
   | 'security-access'
+  | 'api-keys'
   | 'system-config'
   | 'settings'
   | 'grafana'
@@ -69,6 +70,8 @@ export interface UserSession {
   email: string;
   name: string;
   role: string;
+  subscriptionStatus?: string;
+  plan?: string;
   avatarUrl?: string;
   photoURL?: string;
   loginTime: string;

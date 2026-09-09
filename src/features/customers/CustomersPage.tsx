@@ -45,8 +45,8 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({
 
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
           {lang === 'fr'
-            ? "Découvrez comment plus de 50 000 fondateurs et dirigeants utilisent BizOS pour éradiquer le surmenage et accélérer leurs cycles d'exécution."
-            : "Discover how over 50,000 founders and executive leaders harness BizOS to eliminate fatigue and operate with precision."}
+            ? "Découvrez comment plus de 50 000 fondateurs et dirigeants utilisent BeeCarbonat pour éradiquer le surmenage et accélérer leurs cycles d'exécution."
+            : "Discover how over 50,000 founders and executive leaders harness BeeCarbonat to eliminate fatigue and operate with precision."}
         </p>
       </div>
 
@@ -115,13 +115,13 @@ export const CustomersPage: React.FC<CustomersPageProps> = ({
             <h4 className="text-base font-bold text-[#e8defb]">Elena Vance</h4>
             <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">CEO & Co-founder, Lumina</p>
             <p className="text-xs text-slate-600 dark:text-slate-400 italic leading-relaxed mb-6">
-              "BizOS est devenu notre couche cognitive invisible. Je ne pourrais plus imaginer diriger sans."
+              "BeeCarbonat est devenu notre couche cognitive invisible. Je ne pourrais plus imaginer diriger sans."
             </p>
             <button
               onClick={onOpenTrial}
               className="w-full bg-gradient-to-r from-[#ecd7ff] to-[#ffb2bb] text-[#571c27] py-2.5 rounded-full font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(216,180,254,0.3)] hover:scale-102 transition-transform"
             >
-              Rejoindre les Fondateurs BizOS
+              Rejoindre les Fondateurs BeeCarbonat
             </button>
           </div>
         </div>

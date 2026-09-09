@@ -62,6 +62,9 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  isFreePlan: boolean;
+  isProPlan: boolean;
+  isEnterprisePlan: boolean;
   customDomain: string;
   logAuditAction: (action: string, category: string, details: string) => Promise<void>;
   formatAuthError: (error: any, lang?: 'fr' | 'en') => string;
@@ -113,20 +116,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        // 1. Immediately load from localStorage cache for instant UI rendering and absolute offline resilience
+        const cacheKey = `beecarbonat_user_profile_${currentUser.uid}`;
+        let cachedProfile: UserProfile | null = null;
+        try {
+          const cachedRaw = localStorage.getItem(cacheKey);
+          if (cachedRaw) {
+            cachedProfile = JSON.parse(cachedRaw) as UserProfile;
+            setProfile(cachedProfile);
+          }
+        } catch (e) {
+          console.warn('Failed to parse cached profile:', e);
+        }
+
         try {
           // Sync with Node.js backend for JWT session
           await syncBackendSession(currentUser);
 
           const userDocRef = doc(db, 'users', currentUser.uid);
-          const userDoc = await getDoc(userDocRef);
           
-          if (userDoc.exists()) {
+          let userDoc;
+          try {
+            userDoc = await getDoc(userDocRef);
+          } catch (fetchError) {
+            // Check if client is offline to prevent alarming red logs and use cached profile
+            const isOffline = fetchError instanceof Error && 
+              (fetchError.message.includes('offline') || fetchError.message.includes('Could not reach'));
+            
+            if (isOffline) {
+              console.warn('Firestore is offline. Using local cached user profile securely.');
+              if (!cachedProfile) {
+                const defaultProfile: UserProfile = {
+                  userId: currentUser.uid,
+                  email: currentUser.email || '',
+                  displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Enterprise Operator',
+                  photoURL: currentUser.photoURL || undefined,
+                  role: currentUser.email === 'beniich.contact@gmail.com' ? 'admin' : 'facility_manager',
+                  subscriptionStatus: currentUser.email === 'beniich.contact@gmail.com' ? 'active' : 'inactive',
+                  domain: customDomain,
+                  lastLoginAt: new Date().toISOString()
+                };
+                setProfile(defaultProfile);
+                localStorage.setItem(cacheKey, JSON.stringify(defaultProfile));
+              }
+              setLoading(false);
+              return;
+            } else {
+              throw fetchError;
+            }
+          }
+          
+          if (userDoc && userDoc.exists()) {
             const data = userDoc.data() as UserProfile;
             setProfile(data);
-            // Update lastLogin
-            await setDoc(userDocRef, {
-              lastLoginAt: new Date().toISOString()
-            }, { merge: true });
+            // Save in cache
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            
+            // Update lastLogin in background
+            try {
+              await setDoc(userDocRef, {
+                lastLoginAt: new Date().toISOString()
+              }, { merge: true });
+            } catch (e) {
+              // Non-blocking background write
+            }
           } else {
             // Determine role: default admin for workspace owner email, facility_manager for others
             const initialRole: UserProfile['role'] = 
@@ -145,11 +198,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               lastLoginAt: new Date().toISOString()
             };
             
-            await setDoc(userDocRef, newProfile);
+            try {
+              await setDoc(userDocRef, newProfile);
+            } catch (e) {
+              // Silent offline fallback
+            }
             setProfile(newProfile);
+            localStorage.setItem(cacheKey, JSON.stringify(newProfile));
           }
 
-          // Write audit log entry
+          // Write audit log entry in background
           try {
             await addDoc(collection(db, 'audit_logs'), {
               userId: currentUser.uid,
@@ -164,17 +222,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
         } catch (err) {
-          console.error('Error syncing user profile with Firestore:', err);
-          setProfile({
-            userId: currentUser.uid,
-            email: currentUser.email || '',
-            displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Enterprise Operator',
-            photoURL: currentUser.photoURL || undefined,
-            role: currentUser.email === 'beniich.contact@gmail.com' ? 'admin' : 'facility_manager',
-            subscriptionStatus: currentUser.email === 'beniich.contact@gmail.com' ? 'active' : 'inactive',
-            domain: customDomain,
-            lastLoginAt: new Date().toISOString()
-          });
+          const isOfflineError = err instanceof Error && 
+            (err.message.includes('offline') || err.message.includes('reach Cloud Firestore backend') || err.message.includes('Could not reach'));
+          
+          if (isOfflineError) {
+            console.warn('Firestore is offline, maintaining active cached offline profile.');
+          } else {
+            console.error('Error syncing user profile with Firestore:', err);
+          }
+          
+          if (!cachedProfile) {
+            const fallbackProfile: UserProfile = {
+              userId: currentUser.uid,
+              email: currentUser.email || '',
+              displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Enterprise Operator',
+              photoURL: currentUser.photoURL || undefined,
+              role: currentUser.email === 'beniich.contact@gmail.com' ? 'admin' : 'facility_manager',
+              subscriptionStatus: currentUser.email === 'beniich.contact@gmail.com' ? 'active' : 'inactive',
+              domain: customDomain,
+              lastLoginAt: new Date().toISOString()
+            };
+            setProfile(fallbackProfile);
+            localStorage.setItem(cacheKey, JSON.stringify(fallbackProfile));
+          }
         }
       } else {
         setProfile(null);
@@ -422,6 +492,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       resetPassword,
       signOut, 
       refreshProfile,
+      isFreePlan: profile?.plan !== "PRO" && profile?.plan !== "ENTERPRISE",
+      isProPlan: profile?.plan === "PRO" || profile?.subscriptionStatus === "active",
+      isEnterprisePlan: profile?.plan === "ENTERPRISE",
       customDomain,
       logAuditAction,
       formatAuthError

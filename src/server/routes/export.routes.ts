@@ -98,3 +98,6 @@ exportRouter.get('/mro', (req, res) => {
   res.setHeader('Content-Disposition', 'attachment; filename="beecarbonat-mro-inventory.csv"');
   res.send('\uFEFF' + csv);
 });
+
+export default exportRouter;
+

@@ -19,6 +19,19 @@ export const pool = new Pool({
   idleTimeoutMillis: 5000,
 });
 
+export const isDbConfigured = (): boolean => {
+  if (!connectionString) return false;
+  if (
+    connectionString.includes('@host:') || 
+    connectionString.includes('localhost:5432/fallback') || 
+    connectionString.includes('neondb_owner:password') ||
+    connectionString.includes('user:password@host')
+  ) {
+    return false;
+  }
+  return true;
+};
+
 pool.on('error', (err) => {
   console.warn('[PostgreSQL Pool Background Notice]:', err.message);
 });

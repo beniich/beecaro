@@ -193,21 +193,6 @@ export const GrafanaCockpit: React.FC<GrafanaCockpitProps> = ({
             >
               <span className="material-symbols-outlined text-base">refresh</span>
             </button>
-
-            {/* Mode Switcher */}
-            <button
-              onClick={() => setIsSimulated(!isSimulated)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                !isSimulated
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-              }`}
-            >
-              <span className="material-symbols-outlined text-sm">
-                {!isSimulated ? 'cloud_done' : 'science'}
-              </span>
-              <span>{!isSimulated ? 'Mode: Live Backend' : 'Mode: Simulateur'}</span>
-            </button>
           </div>
         </div>
 

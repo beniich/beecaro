@@ -281,39 +281,6 @@ export const OfflineCacheStatus: React.FC<OfflineCacheStatusProps> = ({
               </div>
             </div>
 
-            {/* Offline Simulation Switch */}
-            <div className={`p-4 rounded-xl border mb-5 flex items-center justify-between gap-4 ${
-              meta.isSimulatedOffline 
-                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' 
-                : isLightMode 
-                  ? 'bg-slate-100/70 border-slate-200' 
-                  : 'bg-white/5 border-white/10'
-            }`}>
-              <div className="space-y-0.5">
-                <div className="text-xs font-mono font-bold flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-[#ff9d2b]" />
-                  <span>{lang === 'fr' ? 'Simulateur de Déconnexion' : 'Offline Simulation Mode'}</span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-neutral-400">
-                  {lang === 'fr' 
-                    ? 'Coupez artificiellement le réseau pour tester la consultation et création d\'actifs hors-ligne.'
-                    : 'Artificially cut network traffic to test asset/work order viewing and drafting offline.'}
-                </p>
-              </div>
-              <button
-                onClick={handleToggleSimulatedOffline}
-                className={`shrink-0 px-3.5 py-1.5 rounded-xl font-mono text-xs font-bold transition-all shadow-sm ${
-                  meta.isSimulatedOffline
-                    ? 'bg-amber-500 text-black hover:bg-amber-400 shadow-amber-500/20'
-                    : 'bg-neutral-800 text-gray-300 hover:bg-neutral-700 hover:text-black dark:text-white border border-neutral-700'
-                }`}
-              >
-                {meta.isSimulatedOffline 
-                  ? (lang === 'fr' ? 'DÉSACTIVER' : 'DEACTIVATE') 
-                  : (lang === 'fr' ? 'ACTIVER' : 'ACTIVATE')}
-              </button>
-            </div>
-
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-slate-200 dark:border-neutral-800">
               <button

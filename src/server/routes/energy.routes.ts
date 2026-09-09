@@ -3,6 +3,8 @@ import { mockEnergyTimeSeries } from '../../data/mockData';
 
 export const energyRouter = Router();
 
-energyRouter.get('/energy-timeseries', (req, res) => {
+energyRouter.get('/', (req, res) => {
   res.json(mockEnergyTimeSeries);
 });
+
+export default energyRouter;

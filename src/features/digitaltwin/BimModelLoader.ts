@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import * as WebIFC from 'web-ifc';
-import { IFCLoader } from 'web-ifc-three/IFCLoader';
 import { BimDiscipline, BimElement, BimModelMetadata } from '../../types/bim';
 
 export interface LoadedBimScene {
@@ -32,13 +30,14 @@ const createMaterial = (
 
 export class BimModelLoader {
   private static gltfLoader = new GLTFLoader();
-  private static ifcApiInstance: WebIFC.IfcAPI | null = null;
+  private static ifcApiInstance: any = null;
   private static isIfcApiInitialized = false;
 
   /**
    * Initializes and returns an IFCLoader instance from web-ifc-three
    */
-  public static async createIfcLoader(): Promise<IFCLoader> {
+  public static async createIfcLoader(): Promise<any> {
+    const { IFCLoader } = await import('web-ifc-three/IFCLoader');
     const loader = new IFCLoader();
     await loader.ifcManager.setWasmPath('https://unpkg.com/web-ifc@0.0.77/');
     return loader;
@@ -47,8 +46,9 @@ export class BimModelLoader {
   /**
    * Initializes WebIFC engine
    */
-  private static async getIfcApi(): Promise<WebIFC.IfcAPI> {
+  private static async getIfcApi(): Promise<any> {
     if (!this.ifcApiInstance) {
+      const WebIFC = await import('web-ifc');
       this.ifcApiInstance = new WebIFC.IfcAPI();
       this.ifcApiInstance.SetWasmPath('https://unpkg.com/web-ifc@0.0.77/');
     }
@@ -1015,7 +1015,7 @@ export class BimModelLoader {
             space: createMaterial(0x10b981, true, 0.2, 0.1, 0.9)
           };
 
-          ifcApi.StreamAllMeshes(modelID, (flatMesh) => {
+          ifcApi.StreamAllMeshes(modelID, (flatMesh: any) => {
             const placedGeometries = flatMesh.geometries;
             const expressID = flatMesh.expressID;
 

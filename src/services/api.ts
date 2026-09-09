@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Asset, WorkOrder, LeaseRecord, EsgMetrics, TelemetryNode } from '../types';
-import { localCache } from './localCache';
+import { localCache, db } from './localCache';
 
 // Axios Instance configured for Enterprise Session Authentication
 export const apiClient = axios.create({
@@ -325,6 +325,26 @@ export const api = {
     }
 
     return locallyUpdated;
+  },
+
+  // Delete work order with local cache update and optional API sync
+  async deleteWorkOrder(id: string): Promise<boolean> {
+    await db.workOrders.delete(id);
+    const cached = await localCache.getCachedWorkOrders();
+    await localCache.saveCachedWorkOrders(cached.filter(w => w.id !== id && w.ticketNumber !== id));
+
+    if (localCache.isOnline()) {
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/api/workorders/${id}`, {
+          method: 'DELETE',
+          signal: AbortSignal.timeout(3000)
+        });
+        return response.ok;
+      } catch (e) {
+        console.warn('Network error deleting work order from server:', e);
+      }
+    }
+    return true;
   },
 
   // Background Sync when returning online
