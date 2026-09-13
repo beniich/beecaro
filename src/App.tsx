@@ -138,7 +138,7 @@ export function App() {
 
   useEffect(() => {
     if (firebaseUser) {
-      const role = firebaseProfile?.role === 'admin' || firebaseUser.email === 'beniich.contact@gmail.com'
+      const role = firebaseProfile?.role === 'admin' || firebaseUser.email === 'tarikbenaich@gmail.com'
         ? 'SuperAdmin'
         : firebaseProfile?.role === 'technician'
         ? 'Technician'
@@ -183,7 +183,7 @@ export function App() {
 
   const handleLoginSuccess = (email: string) => {
     let role = 'Admin';
-    if (email.startsWith('founder')) {
+    if (email.startsWith('founder') || email === 'tarikbenaich@gmail.com') {
       role = 'SuperAdmin';
     } else if (email.startsWith('executive')) {
       role = 'Admin';

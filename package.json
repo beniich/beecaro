@@ -61,7 +61,7 @@
     "topojson-client": "^3.1.0",
     "web-ifc": "^0.0.77",
     "web-ifc-three": "^0.0.126",
-    "zod": "^4.5.4",
+    "zod": "^4.6.4",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

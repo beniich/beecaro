@@ -6,7 +6,14 @@ import { eq } from 'drizzle-orm';
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID || '';
 const client = new OAuth2Client(googleClientId);
-const JWT_SECRET = process.env.JWT_SECRET || 'beecarbonit-enterprise-secret-key-2026';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('[AuthService] FATAL: JWT_SECRET is not defined in environment variables. Server cannot start securely.');
+  }
+  return secret;
+}
+const JWT_SECRET: string = getJwtSecret();
 
 // In-memory fallback user registry
 export const memoryUsers: Map<string, any> = new Map();
@@ -14,7 +21,7 @@ export const memoryUsers: Map<string, any> = new Map();
 // Seed initial default user
 memoryUsers.set('user-admin-default', {
   id: 'user-admin-default',
-  email: 'beniich.contact@gmail.com',
+  email: 'tarikbenaich@gmail.com',
   name: 'Admin Workspace Owner',
   googleId: 'google-owner-001',
   role: 'ADMIN',
@@ -62,8 +69,7 @@ export async function verifyGoogleToken(idToken: string, manualProfile?: { email
     }
 
     if (!email) {
-      email = 'user@beecarbonit.com';
-      name = 'BeeCarbonIt Operator';
+      throw new Error('Impossible de résoudre l\'email depuis le token Google. Authentification refusée.');
     }
 
     const userId = googleId ? `usr-${googleId.slice(0, 12)}` : `usr-${Buffer.from(email).toString('hex').slice(0, 10)}`;
@@ -82,9 +88,9 @@ export async function verifyGoogleToken(idToken: string, manualProfile?: { email
 
     if (!user) {
       // Determine initial role
-      const role = email === 'beniich.contact@gmail.com' ? 'ADMIN' : 'VIEWER';
-      const subscriptionStatus = email === 'beniich.contact@gmail.com' ? 'active' : 'inactive';
-      const plan = email === 'beniich.contact@gmail.com' ? 'ENTERPRISE' : undefined;
+      const role = email === 'tarikbenaich@gmail.com' ? 'ADMIN' : 'VIEWER';
+      const subscriptionStatus = email === 'tarikbenaich@gmail.com' ? 'active' : 'inactive';
+      const plan = email === 'tarikbenaich@gmail.com' ? 'ENTERPRISE' : undefined;
 
       const newUser = {
         id: userId,
@@ -137,7 +143,7 @@ export async function verifyGoogleToken(idToken: string, manualProfile?: { email
  */
 export function verifyJwtToken(token: string): DecodedToken | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as DecodedToken;
+    return jwt.verify(token, JWT_SECRET) as unknown as DecodedToken;
   } catch (error) {
     return null;
   }

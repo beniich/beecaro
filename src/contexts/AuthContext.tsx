@@ -73,6 +73,26 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+  // ─── LOCAL SUPERADMIN BYPASS ─────────────────────────────────────────────
+  const BYPASS_EMAIL = 'tarikbenaich@gmail.com';
+  const BYPASS_PASS  = '0000_-tr';
+  const BYPASS_PROFILE: UserProfile = {
+    userId:             'local-superadmin-tarik',
+    email:              'tarikbenaich@gmail.com',
+    displayName:        'Tarik Benaich',
+    companyName:        'BeeCarbonat HQ',
+    role:               'admin',
+    subscriptionStatus: 'active',
+    plan:               'ENTERPRISE',
+    domain:             'beecarbonat.ricecloud.net',
+    isVerified:         true,
+    verificationStatus: 'verified',
+    createdAt:          '2026-01-01T00:00:00.000Z',
+    lastLoginAt:        new Date().toISOString(),
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -151,8 +171,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   email: currentUser.email || '',
                   displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Enterprise Operator',
                   photoURL: currentUser.photoURL || undefined,
-                  role: currentUser.email === 'beniich.contact@gmail.com' ? 'admin' : 'facility_manager',
-                  subscriptionStatus: currentUser.email === 'beniich.contact@gmail.com' ? 'active' : 'inactive',
+                  role: currentUser.email === 'tarikbenaich@gmail.com' ? 'admin' : 'facility_manager',
+                  subscriptionStatus: currentUser.email === 'tarikbenaich@gmail.com' ? 'active' : 'inactive',
                   domain: customDomain,
                   lastLoginAt: new Date().toISOString()
                 };
@@ -183,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             // Determine role: default admin for workspace owner email, facility_manager for others
             const initialRole: UserProfile['role'] = 
-              currentUser.email === 'beniich.contact@gmail.com' ? 'admin' : 'facility_manager';
+              currentUser.email === 'tarikbenaich@gmail.com' ? 'admin' : 'facility_manager';
             
             const newProfile: UserProfile = {
               userId: currentUser.uid,
@@ -191,8 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Enterprise Operator',
               photoURL: currentUser.photoURL || undefined,
               role: initialRole,
-              subscriptionStatus: currentUser.email === 'beniich.contact@gmail.com' ? 'active' : 'inactive',
-              plan: currentUser.email === 'beniich.contact@gmail.com' ? 'ENTERPRISE' : undefined,
+              subscriptionStatus: currentUser.email === 'tarikbenaich@gmail.com' ? 'active' : 'inactive',
+              plan: currentUser.email === 'tarikbenaich@gmail.com' ? 'ENTERPRISE' : undefined,
               domain: customDomain,
               createdAt: new Date().toISOString(),
               lastLoginAt: new Date().toISOString()
@@ -237,8 +257,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: currentUser.email || '',
               displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Enterprise Operator',
               photoURL: currentUser.photoURL || undefined,
-              role: currentUser.email === 'beniich.contact@gmail.com' ? 'admin' : 'facility_manager',
-              subscriptionStatus: currentUser.email === 'beniich.contact@gmail.com' ? 'active' : 'inactive',
+              role: currentUser.email === 'tarikbenaich@gmail.com' ? 'admin' : 'facility_manager',
+              subscriptionStatus: currentUser.email === 'tarikbenaich@gmail.com' ? 'active' : 'inactive',
               domain: customDomain,
               lastLoginAt: new Date().toISOString()
             };
@@ -247,6 +267,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } else {
+        // --- LOCAL BYPASS CHECK ---
+        const savedUserStr = localStorage.getItem('beecarbonat_user');
+        if (savedUserStr && savedUserStr.includes('tarikbenaich@gmail.com')) {
+           const profileStr = localStorage.getItem('beecarbonat_user_profile_local-superadmin-tarik');
+           if (profileStr) {
+               setProfile(JSON.parse(profileStr));
+               setLoading(false);
+               return;
+           }
+        }
+        // --------------------------
         setProfile(null);
         setCachedGoogleAccessToken(null);
         setGoogleAccessTokenState(null);
@@ -281,6 +312,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithEmail = async (email: string, pass: string): Promise<UserCredential> => {
+    // ─── LOCAL BYPASS: no Firebase needed ────────────────────────────────
+    if (email.trim() === BYPASS_EMAIL && pass === BYPASS_PASS) {
+      console.info('[AuthContext] SuperAdmin bypass → Tarik Benaich');
+      setProfile(BYPASS_PROFILE);
+      try {
+        localStorage.setItem('beecarbonat_user', JSON.stringify({
+          email: 'tarikbenaich@gmail.com',
+          name: 'Tarik Benaich',
+          role: 'SuperAdmin',
+          subscriptionStatus: 'active',
+          plan: 'ENTERPRISE',
+          loginTime: new Date().toISOString(),
+        }));
+        localStorage.setItem('beecarbonat_user_profile_local-superadmin-tarik', JSON.stringify(BYPASS_PROFILE));
+      } catch {}
+      return { user: { email: 'tarikbenaich@gmail.com', uid: 'local-superadmin-tarik', displayName: 'Tarik Benaich', photoURL: null, emailVerified: true } } as any;
+    }
+    // ─────────────────────────────────────────────────────────────────────
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
       return cred;
@@ -315,7 +364,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Create Firestore User Document
       const assignedRole: UserProfile['role'] = 
-        email === 'beniich.contact@gmail.com' ? 'admin' : role;
+        email === 'tarikbenaich@gmail.com' ? 'admin' : role;
 
       const newProfile: UserProfile = {
         userId: cred.user.uid,

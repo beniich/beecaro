@@ -89,7 +89,7 @@ const INITIAL_KEYS: ApiKeyItem[] = [
     usageCount: 142850,
     rateLimitPerMin: 1200,
     userId: 'system_admin',
-    userEmail: 'beniich.contact@gmail.com'
+    userEmail: 'tarikbenaich@gmail.com'
   },
   {
     id: 'key_prod_8b3d1e04',
@@ -106,7 +106,7 @@ const INITIAL_KEYS: ApiKeyItem[] = [
     usageCount: 53920,
     rateLimitPerMin: 600,
     userId: 'system_admin',
-    userEmail: 'beniich.contact@gmail.com'
+    userEmail: 'tarikbenaich@gmail.com'
   },
   {
     id: 'key_dev_3e7a6b21',
@@ -123,7 +123,7 @@ const INITIAL_KEYS: ApiKeyItem[] = [
     usageCount: 1240,
     rateLimitPerMin: 300,
     userId: 'system_admin',
-    userEmail: 'beniich.contact@gmail.com'
+    userEmail: 'tarikbenaich@gmail.com'
   },
   {
     id: 'key_old_7d2f9a11',
@@ -141,7 +141,7 @@ const INITIAL_KEYS: ApiKeyItem[] = [
     usageCount: 8940,
     rateLimitPerMin: 60,
     userId: 'system_admin',
-    userEmail: 'beniich.contact@gmail.com'
+    userEmail: 'tarikbenaich@gmail.com'
   }
 ];
 
@@ -307,7 +307,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({
 
     const newKeyId = `key_${hex.slice(0, 8)}`;
     const currentUserId = firebaseUser?.uid || 'user_admin';
-    const currentUserEmail = firebaseUser?.email || 'beniich.contact@gmail.com';
+    const currentUserEmail = firebaseUser?.email || 'tarikbenaich@gmail.com';
 
     const newEntry: ApiKeyItem = {
       id: newKeyId,

@@ -51,7 +51,7 @@ export const CyberCockpitNav: React.FC<CyberCockpitNavProps> = ({
 
   const activeRole = profile?.role || 'admin';
   const displayName = adminName || profile?.displayName || (user?.email ? user.email.split('@')[0] : 'J. Doe');
-  const userEmail = profile?.email || user?.email || 'beniich.contact@gmail.com';
+  const userEmail = profile?.email || user?.email || 'tarikbenaich@gmail.com';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

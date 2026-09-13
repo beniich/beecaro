@@ -580,21 +580,35 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <div className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-semibold mb-2 text-center">
                 ⚡ Accès Démo Instantané (1-Clic)
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
                 <button
-                  onClick={() => handleQuickDemo('founder')}
-                  className="py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+                  type="button"
+                  onClick={() => {
+                    setMode('signin');
+                    setEmail('tarikbenaich@gmail.com');
+                    setPassword('0000_-tr');
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-bold text-amber-300 flex items-center justify-center gap-2 transition-all shadow-md"
                 >
-                  <User className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Directeur RSE</span>
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>🔑 Auto-remplir SuperAdmin (Bypass)</span>
                 </button>
-                <button
-                  onClick={() => handleQuickDemo('executive')}
-                  className="py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Facility Manager</span>
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleQuickDemo('founder')}
+                    className="py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <User className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Directeur RSE</span>
+                  </button>
+                  <button
+                    onClick={() => handleQuickDemo('executive')}
+                    className="py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Facility Manager</span>
+                  </button>
+                </div>
               </div>
             </div>
           </>

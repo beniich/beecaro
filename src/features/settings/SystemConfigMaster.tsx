@@ -81,7 +81,7 @@ export const SystemConfigMaster: React.FC<SystemConfigMasterProps> = ({ lang, is
       try { return JSON.parse(saved); } catch (e) {}
     }
     return [
-      { id: '4a8f9c10d2e3f4a5b6c7d8e9f0a1b2c3', email: 'beniich.contact@gmail.com', role: 'SUPERADMIN', plan: 'ENTERPRISE', status: 'confirmed', createdAt: '2026-09-08 10:15' },
+      { id: '4a8f9c10d2e3f4a5b6c7d8e9f0a1b2c3', email: 'tarikbenaich@gmail.com', role: 'SUPERADMIN', plan: 'ENTERPRISE', status: 'confirmed', createdAt: '2026-09-08 10:15' },
       { id: '8a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d', email: 'co2.auditor@beecarbonat.net', role: 'ADMIN', plan: 'PRO', status: 'confirmed', createdAt: '2026-09-08 11:02' },
       { id: 'f1e2d3c4b5a697887766554433221100', email: 'facility.manager@spider-ops.fr', role: 'FACILITY_MANAGER', plan: 'PRO', status: 'pending', createdAt: '2026-09-08 11:20' }
     ];
